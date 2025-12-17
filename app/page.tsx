@@ -78,9 +78,21 @@ export default function Home() {
   const [editingProject, setEditingProject] = useState<ProjectWithProgress | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
+
+  // Filter projects and tasks based on search query
+  const filteredProjects = projectsWithProgress.filter(project =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredTasks = tasks.filter(task =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Get current date
   const today = new Date();
@@ -247,8 +259,10 @@ export default function Home() {
             </svg>
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder="Rechercher projets, tâches..."
               className="search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{ background: 'var(--background-white)', color: 'var(--foreground)' }}
             />
           </div>
@@ -348,7 +362,112 @@ export default function Home() {
             />
           )}
 
-          {currentView === 'dashboard' && !selectedProject ? (
+          {currentView === 'dashboard' && !selectedProject && searchQuery ? (
+            /* Vue Résultats de recherche */
+            <>
+              <div className="mb-8">
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  Résultats pour &quot;{searchQuery}&quot;
+                </h1>
+                <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                  {filteredProjects.length} projet(s) et {filteredTasks.length} tâche(s) trouvé(s)
+                </p>
+              </div>
+
+              {/* Projets trouvés */}
+              {filteredProjects.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+                    Projets ({filteredProjects.length})
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredProjects.map(project => (
+                      <ProjectCard
+                        key={project.id}
+                        project={project}
+                        onSelect={setSelectedProjectId}
+                        onEdit={handleEditProject}
+                        onDelete={handleDeleteProject}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tâches trouvées */}
+              {filteredTasks.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+                    Tâches ({filteredTasks.length})
+                  </h2>
+                  <div className="space-y-2">
+                    {filteredTasks.map(task => {
+                      const project = projectsWithProgress.find(p => p.id === task.projectId);
+                      return (
+                        <div
+                          key={task.id}
+                          className="card p-4 cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => {
+                            setSelectedProjectId(task.projectId);
+                            setSearchQuery('');
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{
+                                  backgroundColor: task.status === 'done' ? 'var(--success)' :
+                                    task.status === 'in_progress' ? 'var(--warning)' : 'var(--foreground-light)'
+                                }}
+                              />
+                              <div>
+                                <p className="font-medium" style={{ color: 'var(--foreground)' }}>{task.title}</p>
+                                {project && (
+                                  <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                                    Projet: {project.name}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span
+                              className="px-2 py-1 rounded-full text-xs font-medium"
+                              style={{
+                                backgroundColor: task.priority === 'high' ? 'var(--danger-bg)' :
+                                  task.priority === 'medium' ? 'var(--warning-bg)' : 'var(--success-bg)',
+                                color: task.priority === 'high' ? 'var(--danger)' :
+                                  task.priority === 'medium' ? 'var(--warning)' : 'var(--success)'
+                              }}
+                            >
+                              {task.priority === 'high' ? 'Haute' : task.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Aucun résultat */}
+              {filteredProjects.length === 0 && filteredTasks.length === 0 && (
+                <div className="card p-16 text-center">
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
+                    <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucun résultat</h3>
+                  <p className="mb-6 max-w-sm mx-auto" style={{ color: 'var(--foreground-muted)' }}>
+                    Aucun projet ou tâche ne correspond à votre recherche
+                  </p>
+                  <button onClick={() => setSearchQuery('')} className="btn btn-secondary">
+                    Effacer la recherche
+                  </button>
+                </div>
+              )}
+            </>
+          ) : currentView === 'dashboard' && !selectedProject ? (
             /* Vue Dashboard */
             <>
               {/* Greeting */}
@@ -669,9 +788,24 @@ export default function Home() {
                     Créer un projet
                   </button>
                 </div>
+              ) : filteredProjects.length === 0 && searchQuery ? (
+                <div className="card p-16 text-center">
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
+                    <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucun résultat</h3>
+                  <p className="mb-6 max-w-sm mx-auto" style={{ color: 'var(--foreground-muted)' }}>
+                    Aucun projet ne correspond à &quot;{searchQuery}&quot;
+                  </p>
+                  <button onClick={() => setSearchQuery('')} className="btn btn-secondary">
+                    Effacer la recherche
+                  </button>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {projectsWithProgress.map(project => (
+                  {filteredProjects.map(project => (
                     <ProjectCard
                       key={project.id}
                       project={project}
