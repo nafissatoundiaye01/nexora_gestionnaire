@@ -176,6 +176,7 @@ export async function createTask(task: Omit<Task, 'id' | 'createdAt' | 'updatedA
       priority: task.priority,
       project_id: task.projectId,
       due_date: task.dueDate,
+      assigned_to: task.assignedTo,
     })
     .select()
     .single();

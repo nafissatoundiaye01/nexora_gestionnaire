@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Task, TaskStatus, Priority } from '../types';
+import { Task, TaskStatus, Priority, User } from '../types';
 import CustomSelect from './CustomSelect';
 import CustomDatePicker from './CustomDatePicker';
 
@@ -11,14 +11,17 @@ interface TaskModalProps {
   onSave: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
   task?: Task | null;
   projectId: string;
+  users?: Omit<User, 'password'>[];
+  currentUserId?: string;
 }
 
-export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, onSave, task, projectId, users = [], currentUserId }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TaskStatus>('todo');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState('');
+  const [assignedTo, setAssignedTo] = useState<string>('');
 
   useEffect(() => {
     if (task) {
@@ -27,14 +30,16 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
       setStatus(task.status);
       setPriority(task.priority);
       setDueDate(task.dueDate || '');
+      setAssignedTo(task.assignedTo || '');
     } else {
       setTitle('');
       setDescription('');
       setStatus('todo');
       setPriority('medium');
       setDueDate('');
+      setAssignedTo(currentUserId || '');
     }
-  }, [task, isOpen]);
+  }, [task, isOpen, currentUserId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +51,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
       priority,
       projectId,
       dueDate: dueDate || undefined,
+      assignedTo: assignedTo || undefined,
     });
     onClose();
   };
@@ -58,9 +64,18 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
     { value: 'high', label: 'Haute', color: '#ef4444' },
   ];
 
+  // Build user options for assignment
+  const userOptions = [
+    { value: '', label: 'Non assignee' },
+    ...users.map(user => ({
+      value: user.id,
+      label: user.id === currentUserId ? `${user.name} (Moi)` : user.name,
+    })),
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="rounded-2xl shadow-xl max-w-md w-full animate-slide-in" style={{ backgroundColor: 'var(--background-white)' }}>
+      <div className="rounded-2xl shadow-xl max-w-md w-full animate-slide-in max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'var(--background-white)' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
@@ -126,6 +141,15 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
                 placeholder="Selectionner"
               />
             </div>
+
+            {/* Assignation */}
+            <CustomSelect
+              label="Assigner a"
+              value={assignedTo}
+              onChange={setAssignedTo}
+              options={userOptions}
+              placeholder="Selectionner un utilisateur"
+            />
 
             <div>
               <label className="block text-sm font-medium mb-3" style={{ color: 'var(--foreground-muted)' }}>

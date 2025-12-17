@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProjects } from './hooks/useProjects';
 import { useTheme } from './hooks/useTheme';
 import { useCorrections } from './hooks/useCorrections';
 import { useNotifications } from './hooks/useNotifications';
 import { useAuth } from './hooks/useAuth';
-import { Project, Task, ProjectWithProgress, TaskStatus } from './types';
+import { Project, Task, ProjectWithProgress, TaskStatus, User } from './types';
 import Sidebar, { ViewType } from './components/Sidebar';
 import ProjectCard from './components/ProjectCard';
 import TaskCard from './components/TaskCard';
@@ -80,6 +80,25 @@ export default function Home() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'on_hold'>('all');
+  const [allUsers, setAllUsers] = useState<Omit<User, 'password'>[]>([]);
+
+  // Load all users for task assignment
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const users = await response.json();
+          setAllUsers(users);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    if (isAuthenticated) {
+      fetchUsers();
+    }
+  }, [isAuthenticated]);
 
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
@@ -1018,6 +1037,8 @@ export default function Home() {
                             onStatusChange={handleTaskStatusChange}
                             onEdit={handleEditTask}
                             onDelete={handleDeleteTask}
+                            users={allUsers}
+                            currentUserId={currentUserId}
                           />
                         ))}
                       </div>
@@ -1039,6 +1060,8 @@ export default function Home() {
                             onStatusChange={handleTaskStatusChange}
                             onEdit={handleEditTask}
                             onDelete={handleDeleteTask}
+                            users={allUsers}
+                            currentUserId={currentUserId}
                           />
                         ))}
                       </div>
@@ -1060,6 +1083,8 @@ export default function Home() {
                             onStatusChange={handleTaskStatusChange}
                             onEdit={handleEditTask}
                             onDelete={handleDeleteTask}
+                            users={allUsers}
+                            currentUserId={currentUserId}
                           />
                         ))}
                       </div>
@@ -1116,6 +1141,8 @@ export default function Home() {
           onSave={handleSaveTask}
           task={editingTask}
           projectId={selectedProject.id}
+          users={allUsers}
+          currentUserId={currentUserId}
         />
       )}
 

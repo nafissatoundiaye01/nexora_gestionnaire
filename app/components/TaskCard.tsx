@@ -1,15 +1,17 @@
 'use client';
 
-import { Task, TaskStatus, Priority } from '../types';
+import { Task, TaskStatus, Priority, User } from '../types';
 
 interface TaskCardProps {
   task: Task;
   onStatusChange: (id: string, status: TaskStatus) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  users?: Omit<User, 'password'>[];
+  currentUserId?: string;
 }
 
-export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, onStatusChange, onEdit, onDelete, users = [], currentUserId }: TaskCardProps) {
   const statusConfig: Record<TaskStatus, { label: string; badgeClass: string }> = {
     todo: { label: 'À faire', badgeClass: 'badge-gray' },
     in_progress: { label: 'En cours', badgeClass: 'badge-primary' },
@@ -31,6 +33,12 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
   const status = statusConfig[task.status];
   const priority = priorityConfig[task.priority];
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done';
+
+  // Get assigned user name
+  const assignedUser = task.assignedTo ? users.find(u => u.id === task.assignedTo) : null;
+  const assignedUserName = assignedUser
+    ? (assignedUser.id === currentUserId ? 'Moi' : assignedUser.name)
+    : null;
 
   return (
     <div className={`rounded-xl p-4 animate-fade-in transition-all group ${task.status === 'done' ? 'opacity-60' : ''}`} style={{ background: 'var(--background-white)', border: '1px solid var(--border)' }}>
@@ -62,7 +70,7 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
             <p className="text-sm mb-2 line-clamp-2" style={{ color: 'var(--foreground-muted)' }}>{task.description}</p>
           )}
 
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm flex-wrap">
             {/* Priority */}
             <div className="flex items-center gap-1.5">
               <span
@@ -71,6 +79,16 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
               />
               <span style={{ color: 'var(--foreground-muted)' }}>{priority.label}</span>
             </div>
+
+            {/* Assigned user */}
+            {assignedUserName && (
+              <div className="flex items-center gap-1.5" style={{ color: 'var(--foreground-muted)' }}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span>{assignedUserName}</span>
+              </div>
+            )}
 
             {/* Due date */}
             {task.dueDate && (
@@ -89,7 +107,8 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(task)}
-            className="p-2 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+            className="p-2 rounded-lg transition-all"
+            style={{ color: 'var(--foreground-muted)' }}
             title="Modifier"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,7 +117,8 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete }: Tas
           </button>
           <button
             onClick={() => onDelete(task.id)}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            className="p-2 rounded-lg transition-all"
+            style={{ color: 'var(--foreground-muted)' }}
             title="Supprimer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
