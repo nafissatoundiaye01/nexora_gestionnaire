@@ -11,7 +11,8 @@
       "Bash(timeout 10 npm run dev:*)",
       "Bash(del \"C:\\Users\\hp\\nexora_agenda\\data\\db.json\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

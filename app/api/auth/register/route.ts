@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       password: hashPassword(password),
       name,
       role: 'user',
+      mustChangePassword: false,
     });
 
     // Create auth token
