@@ -18,6 +18,7 @@ import SettingsModal from './components/SettingsModal';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import LoginPage from './components/LoginPage';
 import ChangePasswordModal from './components/ChangePasswordModal';
+import ConfirmModal from './components/ConfirmModal';
 
 export default function Home() {
   // Authentication
@@ -75,6 +76,10 @@ export default function Home() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [deleteProjectConfirm, setDeleteProjectConfirm] = useState<{ isOpen: boolean; project: Project | null }>({
+    isOpen: false,
+    project: null,
+  });
   const [editingProject, setEditingProject] = useState<ProjectWithProgress | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -151,12 +156,20 @@ export default function Home() {
   };
 
   const handleDeleteProject = (id: string) => {
-    if (confirm('Supprimer ce projet et toutes ses tâches ?')) {
-      deleteProject(id);
-      if (selectedProjectId === id) {
+    const project = projects.find(p => p.id === id);
+    if (project) {
+      setDeleteProjectConfirm({ isOpen: true, project });
+    }
+  };
+
+  const confirmDeleteProject = () => {
+    if (deleteProjectConfirm.project) {
+      deleteProject(deleteProjectConfirm.project.id);
+      if (selectedProjectId === deleteProjectConfirm.project.id) {
         setSelectedProjectId(null);
       }
     }
+    setDeleteProjectConfirm({ isOpen: false, project: null });
   };
 
   const handleAddTask = () => {
@@ -1151,6 +1164,15 @@ export default function Home() {
         onClose={() => setIsSettingsOpen(false)}
         isDark={isDark}
         onToggleTheme={toggleTheme}
+      />
+
+      <ConfirmModal
+        isOpen={deleteProjectConfirm.isOpen}
+        title="Supprimer le projet"
+        message={`Etes-vous sur de vouloir supprimer le projet "${deleteProjectConfirm.project?.name}" et toutes ses taches ? Cette action est irreversible.`}
+        confirmLabel="Supprimer"
+        onConfirm={confirmDeleteProject}
+        onCancel={() => setDeleteProjectConfirm({ isOpen: false, project: null })}
       />
     </div>
   );

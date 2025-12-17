@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { Task, TaskStatus, Priority, User } from '../types';
+import ConfirmModal from './ConfirmModal';
 
 interface TaskCardProps {
   task: Task;
@@ -12,6 +14,7 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onStatusChange, onEdit, onDelete, users = [], currentUserId }: TaskCardProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const statusConfig: Record<TaskStatus, { label: string; badgeClass: string }> = {
     todo: { label: 'À faire', badgeClass: 'badge-gray' },
     in_progress: { label: 'En cours', badgeClass: 'badge-primary' },
@@ -116,7 +119,7 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, users
             </svg>
           </button>
           <button
-            onClick={() => onDelete(task.id)}
+            onClick={() => setShowDeleteConfirm(true)}
             className="p-2 rounded-lg transition-all"
             style={{ color: 'var(--foreground-muted)' }}
             title="Supprimer"
@@ -127,6 +130,18 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, users
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Supprimer la tache"
+        message={`Etes-vous sur de vouloir supprimer la tache "${task.title}" ? Cette action est irreversible.`}
+        confirmLabel="Supprimer"
+        onConfirm={() => {
+          onDelete(task.id);
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

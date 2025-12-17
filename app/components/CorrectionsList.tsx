@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Correction, User, CorrectionStatus, Priority } from '../types';
 import CustomSelect from './CustomSelect';
 import CustomDatePicker from './CustomDatePicker';
+import ConfirmModal from './ConfirmModal';
 
 interface CorrectionsListProps {
   corrections: Correction[];
@@ -33,6 +34,10 @@ export default function CorrectionsList({
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; correction: Correction | null }>({
+    isOpen: false,
+    correction: null,
+  });
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -372,7 +377,7 @@ export default function CorrectionsList({
                   </svg>
                 </button>
                 <button
-                  onClick={() => onDelete(correction.id)}
+                  onClick={() => setDeleteConfirm({ isOpen: true, correction })}
                   className="p-1.5 rounded-lg hover:bg-red-100 transition-colors"
                   title="Supprimer"
                 >
@@ -428,6 +433,20 @@ export default function CorrectionsList({
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Supprimer le point a rectifier"
+        message={`Etes-vous sur de vouloir supprimer "${deleteConfirm.correction?.title}" ? Cette action est irreversible.`}
+        confirmLabel="Supprimer"
+        onConfirm={async () => {
+          if (deleteConfirm.correction) {
+            await onDelete(deleteConfirm.correction.id);
+          }
+          setDeleteConfirm({ isOpen: false, correction: null });
+        }}
+        onCancel={() => setDeleteConfirm({ isOpen: false, correction: null })}
+      />
     </div>
   );
 }
