@@ -6,6 +6,7 @@ import { useTheme } from './hooks/useTheme';
 import { useCorrections } from './hooks/useCorrections';
 import { useNotifications } from './hooks/useNotifications';
 import { useAuth } from './hooks/useAuth';
+import { useMeetings } from './hooks/useMeetings';
 import { Project, Task, ProjectWithProgress, TaskStatus, User } from './types';
 import Sidebar, { ViewType } from './components/Sidebar';
 import ProjectCard from './components/ProjectCard';
@@ -57,6 +58,14 @@ export default function Home() {
 
   // Current user ID - from authenticated user
   const currentUserId = user?.id;
+
+  const {
+    meetings,
+    isLoaded: meetingsLoaded,
+    addMeeting,
+    updateMeeting,
+    deleteMeeting,
+  } = useMeetings();
 
   const {
     notifications,
@@ -250,7 +259,7 @@ export default function Home() {
   }
 
   // Show loading for data
-  if (!isLoaded || !themeLoaded || !correctionsLoaded || !notificationsLoaded) {
+  if (!isLoaded || !themeLoaded || !correctionsLoaded || !notificationsLoaded || !meetingsLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
         <div className="flex flex-col items-center gap-4">
@@ -394,6 +403,23 @@ export default function Home() {
             <CalendarView
               tasks={tasks}
               projects={projectsWithProgress}
+              meetings={meetings}
+              users={allUsers}
+              currentUserId={currentUserId || ''}
+              onAddMeeting={addMeeting}
+              onUpdateMeeting={updateMeeting}
+              onDeleteMeeting={deleteMeeting}
+              onNotifyAttendees={async (meeting, attendeeIds) => {
+                for (const attendeeId of attendeeIds) {
+                  await addNotification(
+                    'meeting_scheduled',
+                    'Nouvelle reunion',
+                    `Vous etes invite a la reunion "${meeting.title}" le ${new Date(meeting.date).toLocaleDateString('fr-FR')} de ${meeting.startTime} a ${meeting.endTime}`,
+                    attendeeId,
+                    { meetingId: meeting.id }
+                  );
+                }
+              }}
             />
           )}
 

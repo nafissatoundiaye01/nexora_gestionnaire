@@ -1,17 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { Task, ProjectWithProgress } from '../types';
+import { Task, ProjectWithProgress, Meeting, User } from '../types';
+import MeetingModal from './MeetingModal';
+import ConfirmModal from './ConfirmModal';
 
 interface CalendarViewProps {
   tasks: Task[];
   projects: ProjectWithProgress[];
+  meetings: Meeting[];
+  users: Omit<User, 'password'>[];
+  currentUserId: string;
   onTaskClick?: (task: Task) => void;
+  onAddMeeting: (meeting: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Meeting>;
+  onUpdateMeeting: (id: string, updates: Partial<Meeting>) => Promise<Meeting>;
+  onDeleteMeeting: (id: string) => Promise<boolean>;
+  onNotifyAttendees?: (meeting: Meeting, attendees: string[]) => Promise<void>;
 }
 
-export default function CalendarView({ tasks, projects, onTaskClick }: CalendarViewProps) {
+export default function CalendarView({
+  tasks,
+  projects,
+  meetings,
+  users,
+  currentUserId,
+  onTaskClick,
+  onAddMeeting,
+  onUpdateMeeting,
+  onDeleteMeeting,
+  onNotifyAttendees,
+}: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; meeting: Meeting | null }>({
+    isOpen: false,
+    meeting: null,
+  });
 
   const monthNames = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -53,6 +80,55 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
     });
   };
 
+  const getMeetingsForDate = (date: Date | null) => {
+    if (!date) return [];
+    const dateStr = date.toISOString().split('T')[0];
+    return meetings.filter(meeting => meeting.date === dateStr);
+  };
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date.toISOString().split('T')[0]);
+    setEditingMeeting(null);
+    setIsMeetingModalOpen(true);
+  };
+
+  const handleMeetingClick = (meeting: Meeting, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingMeeting(meeting);
+    setSelectedDate(meeting.date);
+    setIsMeetingModalOpen(true);
+  };
+
+  const handleSaveMeeting = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (editingMeeting) {
+      await onUpdateMeeting(editingMeeting.id, meetingData);
+    } else {
+      const newMeeting = await onAddMeeting(meetingData);
+      // Notify attendees (excluding creator)
+      if (onNotifyAttendees) {
+        const otherAttendees = meetingData.attendees.filter(id => id !== currentUserId);
+        if (otherAttendees.length > 0) {
+          await onNotifyAttendees(newMeeting, otherAttendees);
+        }
+      }
+    }
+    setIsMeetingModalOpen(false);
+    setEditingMeeting(null);
+    setSelectedDate(null);
+  };
+
+  const handleDeleteMeeting = async () => {
+    if (deleteConfirm.meeting) {
+      await onDeleteMeeting(deleteConfirm.meeting.id);
+      setDeleteConfirm({ isOpen: false, meeting: null });
+    }
+  };
+
+  const getUserName = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    return user?.name || 'Inconnu';
+  };
+
   const getProjectColor = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     return project?.color || '#6366f1';
@@ -83,6 +159,17 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
     })
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
 
+  // Get upcoming meetings (next 7 days)
+  const todayStr = today.toISOString().split('T')[0];
+  const nextWeekStr = nextWeek.toISOString().split('T')[0];
+  const upcomingMeetings = meetings
+    .filter(meeting => meeting.date >= todayStr && meeting.date <= nextWeekStr)
+    .sort((a, b) => {
+      const dateCompare = a.date.localeCompare(b.date);
+      if (dateCompare !== 0) return dateCompare;
+      return a.startTime.localeCompare(b.startTime);
+    });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -90,30 +177,45 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Calendrier</h1>
           <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
-            Visualisez vos tâches et échéances
+            Visualisez vos taches, echeances et reunions
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setViewMode('month')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors`}
-            style={{
-              backgroundColor: viewMode === 'month' ? 'var(--primary)' : 'var(--background-white)',
-              color: viewMode === 'month' ? 'white' : 'var(--foreground-muted)',
+            onClick={() => {
+              setSelectedDate(new Date().toISOString().split('T')[0]);
+              setEditingMeeting(null);
+              setIsMeetingModalOpen(true);
             }}
+            className="btn btn-primary flex items-center gap-2"
           >
-            Mois
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Nouvelle reunion
           </button>
-          <button
-            onClick={() => setViewMode('week')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors`}
-            style={{
-              backgroundColor: viewMode === 'week' ? 'var(--primary)' : 'var(--background-white)',
-              color: viewMode === 'week' ? 'white' : 'var(--foreground-muted)',
-            }}
-          >
-            Semaine
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('month')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors`}
+              style={{
+                backgroundColor: viewMode === 'month' ? 'var(--primary)' : 'var(--background-white)',
+                color: viewMode === 'month' ? 'white' : 'var(--foreground-muted)',
+              }}
+            >
+              Mois
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors`}
+              style={{
+                backgroundColor: viewMode === 'week' ? 'var(--primary)' : 'var(--background-white)',
+                color: viewMode === 'week' ? 'white' : 'var(--foreground-muted)',
+              }}
+            >
+              Semaine
+            </button>
+          </div>
         </div>
       </div>
 
@@ -160,9 +262,12 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
           <div className="grid grid-cols-7 gap-1">
             {days.map((date, index) => {
               const dayTasks = getTasksForDate(date);
+              const dayMeetings = getMeetingsForDate(date);
+              const totalItems = dayTasks.length + dayMeetings.length;
               return (
                 <div
                   key={index}
+                  onClick={() => date && handleDateClick(date)}
                   className={`min-h-24 p-2 rounded-lg transition-colors ${
                     date ? 'hover:bg-opacity-50 cursor-pointer' : ''
                   } ${isToday(date) ? 'ring-2 ring-indigo-500' : ''}`}
@@ -179,10 +284,32 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
                         {date.getDate()}
                       </span>
                       <div className="mt-1 space-y-1">
-                        {dayTasks.slice(0, 2).map(task => (
+                        {/* Meetings */}
+                        {dayMeetings.slice(0, 1).map(meeting => (
+                          <div
+                            key={meeting.id}
+                            onClick={(e) => handleMeetingClick(meeting, e)}
+                            className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer hover:opacity-80 flex items-center gap-1"
+                            style={{
+                              backgroundColor: '#8b5cf6',
+                              color: 'white',
+                            }}
+                            title={`${meeting.startTime} - ${meeting.title}`}
+                          >
+                            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="truncate">{meeting.title}</span>
+                          </div>
+                        ))}
+                        {/* Tasks */}
+                        {dayTasks.slice(0, dayMeetings.length > 0 ? 1 : 2).map(task => (
                           <div
                             key={task.id}
-                            onClick={() => onTaskClick?.(task)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTaskClick?.(task);
+                            }}
                             className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer hover:opacity-80"
                             style={{
                               backgroundColor: getProjectColor(task.projectId),
@@ -193,9 +320,9 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
                             {task.title}
                           </div>
                         ))}
-                        {dayTasks.length > 2 && (
+                        {totalItems > 2 && (
                           <span className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
-                            +{dayTasks.length - 2} autres
+                            +{totalItems - 2} autres
                           </span>
                         )}
                       </div>
@@ -207,77 +334,130 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
           </div>
         </div>
 
-        {/* Sidebar - Upcoming tasks */}
-        <div className="card p-6">
-          <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
-            Prochaines échéances
-          </h3>
-
-          {upcomingTasks.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--primary-bg)' }}>
-                <svg className="w-8 h-8" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+        {/* Sidebar */}
+        <div className="card p-6 space-y-6">
+          {/* Upcoming Meetings */}
+          <div>
+            <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
+              Prochaines reunions
+            </h3>
+            {upcomingMeetings.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Aucune reunion prevue</p>
               </div>
-              <p style={{ color: 'var(--foreground-muted)' }}>Aucune échéance proche</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {upcomingTasks.map(task => {
-                const dueDate = new Date(task.dueDate!);
-                const isOverdue = dueDate < today;
-                const project = projects.find(p => p.id === task.projectId);
-
-                return (
+            ) : (
+              <div className="space-y-3">
+                {upcomingMeetings.slice(0, 3).map(meeting => (
                   <div
-                    key={task.id}
-                    onClick={() => onTaskClick?.(task)}
+                    key={meeting.id}
                     className="p-3 rounded-lg cursor-pointer transition-colors hover:opacity-80"
                     style={{ backgroundColor: 'var(--background-secondary)' }}
+                    onClick={() => {
+                      setEditingMeeting(meeting);
+                      setSelectedDate(meeting.date);
+                      setIsMeetingModalOpen(true);
+                    }}
                   >
                     <div className="flex items-start gap-3">
                       <div
                         className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-                        style={{ backgroundColor: getProjectColor(task.projectId) }}
+                        style={{ backgroundColor: '#8b5cf6' }}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate" style={{ color: 'var(--foreground)' }}>
-                          {task.title}
+                          {meeting.title}
                         </p>
-                        <p className="text-sm truncate" style={{ color: 'var(--foreground-muted)' }}>
-                          {project?.name}
+                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                          {meeting.startTime} - {meeting.endTime}
                         </p>
-                        <p
-                          className={`text-xs mt-1 ${isOverdue ? 'text-red-500' : ''}`}
-                          style={{ color: isOverdue ? undefined : 'var(--foreground-light)' }}
-                        >
-                          {dueDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        <p className="text-xs mt-1" style={{ color: 'var(--foreground-light)' }}>
+                          {new Date(meeting.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                          {meeting.attendees.length} participant{meeting.attendees.length > 1 ? 's' : ''}
                         </p>
                       </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          task.status === 'done' ? 'bg-green-100 text-green-700' :
-                          task.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirm({ isOpen: true, meeting });
+                        }}
+                        className="p-1 rounded hover:bg-red-100 transition-colors"
+                        title="Supprimer"
                       >
-                        {task.status === 'done' ? 'Fait' : task.status === 'in_progress' ? 'En cours' : 'À faire'}
-                      </span>
+                        <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming Tasks */}
+          <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+            <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
+              Prochaines echeances
+            </h3>
+
+            {upcomingTasks.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Aucune echeance proche</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingTasks.slice(0, 3).map(task => {
+                  const dueDate = new Date(task.dueDate!);
+                  const isOverdue = dueDate < today;
+                  const project = projects.find(p => p.id === task.projectId);
+
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => onTaskClick?.(task)}
+                      className="p-3 rounded-lg cursor-pointer transition-colors hover:opacity-80"
+                      style={{ backgroundColor: 'var(--background-secondary)' }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
+                          style={{ backgroundColor: getProjectColor(task.projectId) }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate" style={{ color: 'var(--foreground)' }}>
+                            {task.title}
+                          </p>
+                          <p className="text-sm truncate" style={{ color: 'var(--foreground-muted)' }}>
+                            {project?.name}
+                          </p>
+                          <p
+                            className={`text-xs mt-1 ${isOverdue ? 'text-red-500' : ''}`}
+                            style={{ color: isOverdue ? undefined : 'var(--foreground-light)' }}
+                          >
+                            {dueDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Legend */}
-          <div className="mt-6 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
             <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--foreground-muted)' }}>
-              Projets
+              Legende
             </h4>
             <div className="space-y-2">
-              {projects.map(project => (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
+                <span className="text-sm" style={{ color: 'var(--foreground)' }}>Reunion</span>
+              </div>
+              {projects.slice(0, 4).map(project => (
                 <div key={project.id} className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
@@ -292,6 +472,31 @@ export default function CalendarView({ tasks, projects, onTaskClick }: CalendarV
           </div>
         </div>
       </div>
+
+      {/* Meeting Modal */}
+      <MeetingModal
+        isOpen={isMeetingModalOpen}
+        onClose={() => {
+          setIsMeetingModalOpen(false);
+          setEditingMeeting(null);
+          setSelectedDate(null);
+        }}
+        onSave={handleSaveMeeting}
+        meeting={editingMeeting}
+        users={users}
+        currentUserId={currentUserId}
+        selectedDate={selectedDate || undefined}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Supprimer la reunion"
+        message={`Etes-vous sur de vouloir supprimer la reunion "${deleteConfirm.meeting?.title}" ? Cette action est irreversible.`}
+        confirmLabel="Supprimer"
+        onConfirm={handleDeleteMeeting}
+        onCancel={() => setDeleteConfirm({ isOpen: false, meeting: null })}
+      />
     </div>
   );
 }

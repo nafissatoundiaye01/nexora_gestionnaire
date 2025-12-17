@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Project, Task, Correction, TeamMember, Notification, User, AuthToken } from '@/app/types';
+import { Project, Task, Correction, TeamMember, Notification, User, AuthToken, Meeting } from '@/app/types';
 
 // ============ Helper functions ============
 
@@ -449,6 +449,7 @@ export async function createNotification(notification: Omit<Notification, 'id' |
       project_id: notification.projectId || null,
       task_id: notification.taskId || null,
       correction_id: notification.correctionId || null,
+      meeting_id: notification.meetingId || null,
     })
     .select()
     .single();
@@ -739,4 +740,114 @@ export async function cleanExpiredTokens(): Promise<void> {
   if (error) {
     console.error('Error cleaning expired tokens:', error);
   }
+}
+
+// ============ Meetings ============
+
+export async function getMeetings(userId?: string): Promise<Meeting[]> {
+  let query = supabase
+    .from('meetings')
+    .select('*')
+    .order('date', { ascending: true });
+
+  if (userId) {
+    query = query.contains('attendees', [userId]);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching meetings:', error);
+    return [];
+  }
+
+  return (data || []).map(meeting => toCamelCase<Meeting>(meeting));
+}
+
+export async function getMeetingsByDate(date: string): Promise<Meeting[]> {
+  const { data, error } = await supabase
+    .from('meetings')
+    .select('*')
+    .eq('date', date)
+    .order('start_time', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching meetings by date:', error);
+    return [];
+  }
+
+  return (data || []).map(meeting => toCamelCase<Meeting>(meeting));
+}
+
+export async function getMeeting(id: string): Promise<Meeting | undefined> {
+  const { data, error } = await supabase
+    .from('meetings')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching meeting:', error);
+    return undefined;
+  }
+
+  return data ? toCamelCase<Meeting>(data) : undefined;
+}
+
+export async function createMeeting(meeting: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>): Promise<Meeting> {
+  const { data, error } = await supabase
+    .from('meetings')
+    .insert({
+      title: meeting.title,
+      description: meeting.description || '',
+      date: meeting.date,
+      start_time: meeting.startTime,
+      end_time: meeting.endTime,
+      location: meeting.location || null,
+      created_by: meeting.createdBy,
+      attendees: meeting.attendees || [],
+      project_id: meeting.projectId || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating meeting:', error);
+    throw error;
+  }
+
+  return toCamelCase<Meeting>(data);
+}
+
+export async function updateMeeting(id: string, updates: Partial<Omit<Meeting, 'id' | 'createdAt'>>): Promise<Meeting | null> {
+  const snakeUpdates = toSnakeCase(updates as Record<string, unknown>);
+  snakeUpdates.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('meetings')
+    .update(snakeUpdates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating meeting:', error);
+    return null;
+  }
+
+  return data ? toCamelCase<Meeting>(data) : null;
+}
+
+export async function deleteMeeting(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('meetings')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting meeting:', error);
+    return false;
+  }
+
+  return true;
 }

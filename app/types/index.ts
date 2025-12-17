@@ -57,7 +57,22 @@ export interface Correction {
   resolvedAt?: string;
 }
 
-export type NotificationType = 'project_created' | 'task_created' | 'correction_assigned' | 'task_assigned';
+export type NotificationType = 'project_created' | 'task_created' | 'correction_assigned' | 'task_assigned' | 'meeting_scheduled';
+
+export interface Meeting {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  createdBy: string;
+  attendees: string[]; // Array of user IDs
+  projectId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface Notification {
   id: string;
@@ -71,6 +86,7 @@ export interface Notification {
   projectId?: string;
   taskId?: string;
   correctionId?: string;
+  meetingId?: string;
 }
 
 // Authentication types
