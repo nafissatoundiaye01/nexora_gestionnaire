@@ -165,7 +165,7 @@ export default function Home() {
   };
 
   const handleDeleteProject = (id: string) => {
-    const project = projects.find(p => p.id === id);
+    const project = projectsWithProgress.find(p => p.id === id);
     if (project) {
       setDeleteProjectConfirm({ isOpen: true, project });
     }
