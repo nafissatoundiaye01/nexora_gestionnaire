@@ -79,15 +79,18 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'on_hold'>('all');
 
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
 
-  // Filter projects and tasks based on search query
-  const filteredProjects = projectsWithProgress.filter(project =>
-    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter projects based on search query and status filter
+  const filteredProjects = projectsWithProgress.filter(project => {
+    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -737,7 +740,7 @@ export default function Home() {
             /* Vue des projets */
             <>
               {/* Header */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Projets</h1>
                   <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
@@ -750,6 +753,57 @@ export default function Home() {
                   </svg>
                   Nouveau projet
                 </button>
+              </div>
+
+              {/* Filters */}
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Filtrer par:</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                    style={{
+                      backgroundColor: statusFilter === 'all' ? 'var(--primary)' : 'var(--background-white)',
+                      color: statusFilter === 'all' ? 'white' : 'var(--foreground-muted)',
+                      border: statusFilter === 'all' ? 'none' : '1px solid var(--border)'
+                    }}
+                  >
+                    Tous ({projectsWithProgress.length})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('active')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                    style={{
+                      backgroundColor: statusFilter === 'active' ? 'var(--success)' : 'var(--background-white)',
+                      color: statusFilter === 'active' ? 'white' : 'var(--foreground-muted)',
+                      border: statusFilter === 'active' ? 'none' : '1px solid var(--border)'
+                    }}
+                  >
+                    Actifs ({projectsWithProgress.filter(p => p.status === 'active').length})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('completed')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                    style={{
+                      backgroundColor: statusFilter === 'completed' ? 'var(--primary)' : 'var(--background-white)',
+                      color: statusFilter === 'completed' ? 'white' : 'var(--foreground-muted)',
+                      border: statusFilter === 'completed' ? 'none' : '1px solid var(--border)'
+                    }}
+                  >
+                    Terminés ({projectsWithProgress.filter(p => p.status === 'completed').length})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('on_hold')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+                    style={{
+                      backgroundColor: statusFilter === 'on_hold' ? 'var(--warning)' : 'var(--background-white)',
+                      color: statusFilter === 'on_hold' ? 'white' : 'var(--foreground-muted)',
+                      border: statusFilter === 'on_hold' ? 'none' : '1px solid var(--border)'
+                    }}
+                  >
+                    En pause ({projectsWithProgress.filter(p => p.status === 'on_hold').length})
+                  </button>
+                </div>
               </div>
 
               {/* Stats */}
@@ -788,19 +842,27 @@ export default function Home() {
                     Créer un projet
                   </button>
                 </div>
-              ) : filteredProjects.length === 0 && searchQuery ? (
+              ) : filteredProjects.length === 0 && (searchQuery || statusFilter !== 'all') ? (
                 <div className="card p-16 text-center">
                   <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
                     <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
                   </div>
                   <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucun résultat</h3>
                   <p className="mb-6 max-w-sm mx-auto" style={{ color: 'var(--foreground-muted)' }}>
-                    Aucun projet ne correspond à &quot;{searchQuery}&quot;
+                    {searchQuery && statusFilter !== 'all'
+                      ? `Aucun projet "${statusFilter === 'active' ? 'actif' : statusFilter === 'completed' ? 'terminé' : 'en pause'}" ne correspond à "${searchQuery}"`
+                      : searchQuery
+                        ? `Aucun projet ne correspond à "${searchQuery}"`
+                        : `Aucun projet ${statusFilter === 'active' ? 'actif' : statusFilter === 'completed' ? 'terminé' : 'en pause'}`
+                    }
                   </p>
-                  <button onClick={() => setSearchQuery('')} className="btn btn-secondary">
-                    Effacer la recherche
+                  <button
+                    onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+                    className="btn btn-secondary"
+                  >
+                    Réinitialiser les filtres
                   </button>
                 </div>
               ) : (
