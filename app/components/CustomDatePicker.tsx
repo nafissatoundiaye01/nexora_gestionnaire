@@ -146,10 +146,11 @@ export default function CustomDatePicker({
             ${today && !selected ? 'ring-2 ring-inset' : ''}
           `}
           style={{
-            color: selected ? 'white' : disabled ? 'var(--foreground-light)' : 'var(--foreground)',
-            backgroundColor: selected ? 'var(--primary)' : 'transparent',
-            ringColor: today && !selected ? 'var(--primary)' : undefined,
-          }}
+  color: selected ? 'white' : disabled ? 'var(--foreground-light)' : 'var(--foreground)',
+  backgroundColor: selected ? 'var(--primary)' : 'transparent',
+  outline: today && !selected ? '2px solid var(--primary)' : 'none',
+}}
+
           onMouseEnter={(e) => !disabled && !selected && (e.currentTarget.style.backgroundColor = 'var(--primary-bg)')}
           onMouseLeave={(e) => !disabled && !selected && (e.currentTarget.style.backgroundColor = 'transparent')}
         >
