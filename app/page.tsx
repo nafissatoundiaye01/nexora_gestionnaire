@@ -1095,7 +1095,7 @@ export default function Home() {
                 /* Corrections Tab */
                 <CorrectionsList
                   corrections={getProjectCorrections(selectedProject.id)}
-                  teamMembers={teamMembers}
+                  users={allUsers}
                   projectId={selectedProject.id}
                   projectName={selectedProject.name}
                   currentUserId={currentUserId}

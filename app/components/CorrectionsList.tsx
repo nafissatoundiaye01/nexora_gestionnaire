@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Correction, TeamMember, CorrectionStatus, Priority } from '../types';
+import { Correction, User, CorrectionStatus, Priority } from '../types';
 import CustomSelect from './CustomSelect';
 import CustomDatePicker from './CustomDatePicker';
 
 interface CorrectionsListProps {
   corrections: Correction[];
-  teamMembers: TeamMember[];
+  users: Omit<User, 'password'>[];
   projectId: string;
   projectName?: string;
   currentUserId?: string;
@@ -21,7 +21,7 @@ type FilterType = 'all' | 'mine';
 
 export default function CorrectionsList({
   corrections,
-  teamMembers,
+  users,
   projectId,
   projectName,
   currentUserId,
@@ -129,10 +129,11 @@ export default function CorrectionsList({
     }
   };
 
-  const getMemberName = (memberId?: string) => {
-    if (!memberId) return 'Non assigne';
-    const member = teamMembers.find(m => m.id === memberId);
-    return member?.name || 'Inconnu';
+  const getUserName = (userId?: string) => {
+    if (!userId) return 'Non assigne';
+    if (userId === currentUserId) return 'Moi';
+    const user = users.find(u => u.id === userId);
+    return user?.name || 'Inconnu';
   };
 
   // Apply filter
@@ -255,9 +256,9 @@ export default function CorrectionsList({
                 placeholder="Non assigne"
                 options={[
                   { value: '', label: 'Non assigne' },
-                  ...teamMembers.map(member => ({
-                    value: member.id,
-                    label: member.name,
+                  ...users.map(user => ({
+                    value: user.id,
+                    label: user.id === currentUserId ? `${user.name} (Moi)` : user.name,
                   })),
                 ]}
               />
@@ -325,7 +326,7 @@ export default function CorrectionsList({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    {getMemberName(correction.assignedTo)}
+                    {getUserName(correction.assignedTo)}
                   </span>
                   {correction.dueDate && (
                     <span className="flex items-center gap-1">
