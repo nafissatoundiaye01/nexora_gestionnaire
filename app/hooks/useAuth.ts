@@ -23,6 +23,7 @@ export function useAuth() {
     isLoading: true,
   });
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isRefreshingRef = useRef<boolean>(false);
 
   // Save auth data to localStorage
   const saveToStorage = useCallback((data: AuthResponse) => {
@@ -40,29 +41,29 @@ export function useAuth() {
     localStorage.removeItem(EXPIRES_AT_KEY);
   }, []);
 
-  // Schedule token refresh
-  const scheduleRefresh = useCallback((expiresAt: string) => {
+  // Force logout - only called after refresh fails
+  const forceLogout = useCallback(() => {
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
     }
-
-    const expiresTime = new Date(expiresAt).getTime();
-    const now = Date.now();
-    // Refresh 2 minutes before expiration
-    const refreshTime = expiresTime - now - (2 * 60 * 1000);
-
-    if (refreshTime > 0) {
-      refreshTimeoutRef.current = setTimeout(async () => {
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-        if (refreshToken) {
-          await refreshAccessToken(refreshToken);
-        }
-      }, refreshTime);
-    }
-  }, []);
+    clearStorage();
+    setAuthState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+  }, [clearStorage]);
 
   // Refresh access token
   const refreshAccessToken = useCallback(async (refreshToken: string): Promise<boolean> => {
+    // Prevent multiple simultaneous refresh attempts
+    if (isRefreshingRef.current) {
+      return false;
+    }
+
+    isRefreshingRef.current = true;
+
     try {
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
@@ -82,20 +83,84 @@ export function useAuth() {
         isAuthenticated: true,
         isLoading: false,
       });
-      scheduleRefresh(data.expiresAt);
+
+      // Schedule next refresh
+      const expiresTime = new Date(data.expiresAt).getTime();
+      const now = Date.now();
+      const refreshTime = expiresTime - now - (2 * 60 * 1000); // 2 minutes before expiration
+
+      if (refreshTime > 0 && refreshTimeoutRef.current === null) {
+        refreshTimeoutRef.current = setTimeout(async () => {
+          refreshTimeoutRef.current = null;
+          const rt = localStorage.getItem(REFRESH_TOKEN_KEY);
+          if (rt) {
+            const success = await refreshAccessToken(rt);
+            if (!success) {
+              forceLogout();
+            }
+          }
+        }, refreshTime);
+      }
+
+      isRefreshingRef.current = false;
       return true;
     } catch (error) {
       console.error('Token refresh failed:', error);
-      clearStorage();
-      setAuthState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      isRefreshingRef.current = false;
       return false;
     }
-  }, [saveToStorage, clearStorage, scheduleRefresh]);
+  }, [saveToStorage, forceLogout]);
+
+  // Try to refresh token before any logout
+  const tryRefreshBeforeLogout = useCallback(async (): Promise<boolean> => {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    if (refreshToken) {
+      console.log('Attempting token refresh before logout...');
+      const success = await refreshAccessToken(refreshToken);
+      if (success) {
+        console.log('Token refresh successful, staying logged in');
+        return true;
+      }
+      console.log('Token refresh failed, proceeding with logout');
+    }
+    return false;
+  }, [refreshAccessToken]);
+
+  // Schedule token refresh
+  const scheduleRefresh = useCallback((expiresAt: string) => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = null;
+    }
+
+    const expiresTime = new Date(expiresAt).getTime();
+    const now = Date.now();
+    // Refresh 2 minutes before expiration
+    const refreshTime = expiresTime - now - (2 * 60 * 1000);
+
+    if (refreshTime > 0) {
+      refreshTimeoutRef.current = setTimeout(async () => {
+        refreshTimeoutRef.current = null;
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+        if (refreshToken) {
+          const success = await refreshAccessToken(refreshToken);
+          if (!success) {
+            forceLogout();
+          }
+        }
+      }, refreshTime);
+    } else {
+      // Token is about to expire or already expired, try refresh immediately
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        refreshAccessToken(refreshToken).then(success => {
+          if (!success) {
+            forceLogout();
+          }
+        });
+      }
+    }
+  }, [refreshAccessToken, forceLogout]);
 
   // Validate current token
   const validateToken = useCallback(async (token: string): Promise<boolean> => {
@@ -105,13 +170,11 @@ export function useAuth() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        // If token expired, try to refresh
-        if (data.expired) {
-          const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-          if (refreshToken) {
-            return await refreshAccessToken(refreshToken);
-          }
+        // Token invalid or expired, try to refresh
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+        if (refreshToken) {
+          console.log('Token validation failed, attempting refresh...');
+          return await refreshAccessToken(refreshToken);
         }
         return false;
       }
@@ -131,6 +194,11 @@ export function useAuth() {
       return true;
     } catch (error) {
       console.error('Token validation failed:', error);
+      // Try refresh on any error
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        return await refreshAccessToken(refreshToken);
+      }
       return false;
     }
   }, [refreshAccessToken, scheduleRefresh]);
@@ -141,43 +209,35 @@ export function useAuth() {
       const token = localStorage.getItem(TOKEN_KEY);
       const userStr = localStorage.getItem(USER_KEY);
       const expiresAt = localStorage.getItem(EXPIRES_AT_KEY);
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
       if (token && userStr) {
         // Check if token is expired
         if (expiresAt && new Date(expiresAt) < new Date()) {
-          // Try to refresh
-          const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+          // Token expired, try to refresh first
           if (refreshToken) {
+            console.log('Token expired, attempting refresh...');
             const success = await refreshAccessToken(refreshToken);
             if (!success) {
-              setAuthState({
-                user: null,
-                token: null,
-                isAuthenticated: false,
-                isLoading: false,
-              });
+              forceLogout();
             }
           } else {
-            clearStorage();
-            setAuthState({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              isLoading: false,
-            });
+            forceLogout();
           }
         } else {
           // Validate token with server
           const isValid = await validateToken(token);
           if (!isValid) {
-            clearStorage();
-            setAuthState({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              isLoading: false,
-            });
+            // validateToken already tried refresh, so logout
+            forceLogout();
           }
+        }
+      } else if (refreshToken) {
+        // No token but have refresh token, try to refresh
+        console.log('No token but refresh token exists, attempting refresh...');
+        const success = await refreshAccessToken(refreshToken);
+        if (!success) {
+          forceLogout();
         }
       } else {
         setAuthState({
@@ -196,7 +256,7 @@ export function useAuth() {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [validateToken, refreshAccessToken, clearStorage]);
+  }, [validateToken, refreshAccessToken, forceLogout]);
 
   // Login
   const login = useCallback(async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
@@ -260,8 +320,18 @@ export function useAuth() {
     }
   }, [saveToStorage, scheduleRefresh]);
 
-  // Logout
-  const logout = useCallback(async () => {
+  // Logout - tries refresh first, only logs out if refresh fails
+  const logout = useCallback(async (force: boolean = false) => {
+    // If not forced, try to refresh first
+    if (!force) {
+      const refreshed = await tryRefreshBeforeLogout();
+      if (refreshed) {
+        // Refresh successful, don't logout
+        return;
+      }
+    }
+
+    // Proceed with logout
     const token = localStorage.getItem(TOKEN_KEY);
 
     try {
@@ -274,18 +344,9 @@ export function useAuth() {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-      clearStorage();
-      setAuthState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      forceLogout();
     }
-  }, [clearStorage]);
+  }, [tryRefreshBeforeLogout, forceLogout]);
 
   // Get auth header for API requests
   const getAuthHeader = useCallback(() => {
@@ -301,14 +362,19 @@ export function useAuth() {
     try {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
-        return { success: false, error: 'Non authentifie' };
+        // Try refresh before failing
+        const refreshed = await tryRefreshBeforeLogout();
+        if (!refreshed) {
+          return { success: false, error: 'Non authentifie' };
+        }
       }
 
+      const currentToken = localStorage.getItem(TOKEN_KEY);
       const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
         },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
@@ -316,6 +382,14 @@ export function useAuth() {
       const data = await res.json();
 
       if (!res.ok) {
+        // If unauthorized, try refresh
+        if (res.status === 401) {
+          const refreshed = await tryRefreshBeforeLogout();
+          if (refreshed) {
+            // Retry with new token
+            return changePassword(currentPassword, newPassword);
+          }
+        }
         return { success: false, error: data.error || 'Erreur lors du changement de mot de passe' };
       }
 
@@ -331,7 +405,7 @@ export function useAuth() {
       console.error('Change password error:', error);
       return { success: false, error: 'Erreur lors du changement de mot de passe' };
     }
-  }, []);
+  }, [tryRefreshBeforeLogout]);
 
   return {
     user: authState.user,
@@ -344,5 +418,6 @@ export function useAuth() {
     logout,
     getAuthHeader,
     changePassword,
+    tryRefreshBeforeLogout,
   };
 }
