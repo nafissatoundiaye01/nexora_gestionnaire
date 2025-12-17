@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     // Check if email already exists
-    const existingUser = getUserByEmail(email);
+    const existingUser = await getUserByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'Cet email est deja utilise' },
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     }
 
     // Create user
-    const newUser = createUser({
+    const newUser = await createUser({
       email: email.toLowerCase(),
       password: hashPassword(password),
       name,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     });
 
     // Create auth token
-    const authToken = createAuthToken(newUser.id);
+    const authToken = await createAuthToken(newUser.id);
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = newUser;
