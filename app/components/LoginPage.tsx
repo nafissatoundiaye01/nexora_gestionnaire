@@ -228,7 +228,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
             {/* Footer */}
             <div className="login-footer">
-              <p>&copy; 2024 Nexora Agenda. Tous droits reserves.</p>
+              <p>&copy; 2025 Nexora Agenda. Tous droits reserves.</p>
             </div>
           </div>
         </div>
