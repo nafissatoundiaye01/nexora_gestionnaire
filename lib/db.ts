@@ -444,11 +444,11 @@ export async function createNotification(notification: Omit<Notification, 'id' |
       title: notification.title,
       message: notification.message,
       type: notification.type,
-      read: notification.read,
-      link: notification.link,
-      project_id: notification.projectId,
-      task_id: notification.taskId,
-      correction_id: notification.correctionId,
+      read: notification.read ?? false,
+      link: notification.link || null,
+      project_id: notification.projectId || null,
+      task_id: notification.taskId || null,
+      correction_id: notification.correctionId || null,
     })
     .select()
     .single();

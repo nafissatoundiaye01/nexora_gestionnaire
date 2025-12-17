@@ -12,7 +12,8 @@
       "Bash(del \"C:\\Users\\hp\\nexora_agenda\\data\\db.json\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(node -e:*)"
     ]
   }
 }
