@@ -38,6 +38,7 @@ export function useNotifications(currentUserId?: string) {
       projectId?: string;
       taskId?: string;
       correctionId?: string;
+      meetingId?: string;
       link?: string;
     }
   ) => {
@@ -78,6 +79,7 @@ export function useNotifications(currentUserId?: string) {
       projectId?: string;
       taskId?: string;
       correctionId?: string;
+      meetingId?: string;
       link?: string;
     }
   ) => {
