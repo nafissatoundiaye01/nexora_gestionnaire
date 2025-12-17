@@ -95,6 +95,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'on_hold'>('all');
   const [allUsers, setAllUsers] = useState<Omit<User, 'password'>[]>([]);
+  const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
 
   // Load all users for task assignment
   useEffect(() => {
@@ -1006,131 +1007,183 @@ export default function Home() {
               </div>
 
               {/* Tabs */}
-              <div className="flex gap-4 mb-6">
-                <button
-                  onClick={() => setProjectTab('tasks')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    projectTab === 'tasks'
-                      ? 'text-white'
-                      : ''
-                  }`}
-                  style={{
-                    backgroundColor: projectTab === 'tasks' ? 'var(--primary)' : 'var(--background-white)',
-                    color: projectTab === 'tasks' ? 'white' : 'var(--foreground-muted)',
-                  }}
-                >
-                  <span className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setProjectTab('tasks')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      projectTab === 'tasks'
+                        ? 'text-white'
+                        : ''
+                    }`}
+                    style={{
+                      backgroundColor: projectTab === 'tasks' ? 'var(--primary)' : 'var(--background-white)',
+                      color: projectTab === 'tasks' ? 'white' : 'var(--foreground-muted)',
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      Taches ({selectedProject.tasks.length})
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setProjectTab('corrections')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors`}
+                    style={{
+                      backgroundColor: projectTab === 'corrections' ? 'var(--primary)' : 'var(--background-white)',
+                      color: projectTab === 'corrections' ? 'white' : 'var(--foreground-muted)',
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      Points a rectifier ({getProjectCorrections(selectedProject.id).length})
+                    </span>
+                  </button>
+                </div>
+
+                {/* Filtre Mes taches */}
+                {projectTab === 'tasks' && (
+                  <button
+                    onClick={() => setShowMyTasksOnly(!showMyTasksOnly)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2`}
+                    style={{
+                      backgroundColor: showMyTasksOnly ? 'var(--primary)' : 'var(--background-white)',
+                      color: showMyTasksOnly ? 'white' : 'var(--foreground-muted)',
+                      border: showMyTasksOnly ? 'none' : '1px solid var(--border)',
+                    }}
+                  >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    Taches ({selectedProject.tasks.length})
-                  </span>
-                </button>
-                <button
-                  onClick={() => setProjectTab('corrections')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors`}
-                  style={{
-                    backgroundColor: projectTab === 'corrections' ? 'var(--primary)' : 'var(--background-white)',
-                    color: projectTab === 'corrections' ? 'white' : 'var(--foreground-muted)',
-                  }}
-                >
-                  <span className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Points a rectifier ({getProjectCorrections(selectedProject.id).length})
-                  </span>
-                </button>
+                    Mes taches
+                    {showMyTasksOnly && (
+                      <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
+                        {selectedProject.tasks.filter(t => t.assignedTo === currentUserId).length}
+                      </span>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Tab Content */}
               {projectTab === 'tasks' ? (
                 /* Tasks */
-                selectedProject.tasks.length === 0 ? (
-                <div className="card p-16 text-center">
-                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--primary-bg)' }}>
-                    <svg className="w-10 h-10" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche</h3>
-                  <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Ajoutez des tâches pour suivre l&apos;avancement de votre projet</p>
-                  <button onClick={handleAddTask} className="btn btn-primary">
-                    Ajouter une tâche
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* À faire */}
-                  {selectedProject.tasks.filter(t => t.status === 'todo').length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
-                        <span className="w-2 h-2 rounded-full" style={{ background: 'var(--foreground-light)' }} />
-                        À faire ({selectedProject.tasks.filter(t => t.status === 'todo').length})
-                      </h3>
-                      <div className="space-y-2">
-                        {selectedProject.tasks.filter(t => t.status === 'todo').map(task => (
-                          <TaskCard
-                            key={task.id}
-                            task={task}
-                            onStatusChange={handleTaskStatusChange}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteTask}
-                            users={allUsers}
-                            currentUserId={currentUserId}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                (() => {
+                  const displayedTasks = showMyTasksOnly
+                    ? selectedProject.tasks.filter(t => t.assignedTo === currentUserId)
+                    : selectedProject.tasks;
 
-                  {/* En cours */}
-                  {selectedProject.tasks.filter(t => t.status === 'in_progress').length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
-                        <span className="w-2 h-2 rounded-full" style={{ background: 'var(--warning)' }} />
-                        En cours ({selectedProject.tasks.filter(t => t.status === 'in_progress').length})
-                      </h3>
-                      <div className="space-y-2">
-                        {selectedProject.tasks.filter(t => t.status === 'in_progress').map(task => (
-                          <TaskCard
-                            key={task.id}
-                            task={task}
-                            onStatusChange={handleTaskStatusChange}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteTask}
-                            users={allUsers}
-                            currentUserId={currentUserId}
-                          />
-                        ))}
+                  if (selectedProject.tasks.length === 0) {
+                    return (
+                      <div className="card p-16 text-center">
+                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--primary-bg)' }}>
+                          <svg className="w-10 h-10" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                        </div>
+                        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche</h3>
+                        <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Ajoutez des tâches pour suivre l&apos;avancement de votre projet</p>
+                        <button onClick={handleAddTask} className="btn btn-primary">
+                          Ajouter une tâche
+                        </button>
                       </div>
-                    </div>
-                  )}
+                    );
+                  }
 
-                  {/* Terminées */}
-                  {selectedProject.tasks.filter(t => t.status === 'done').length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
-                        <span className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
-                        Terminées ({selectedProject.tasks.filter(t => t.status === 'done').length})
-                      </h3>
-                      <div className="space-y-2">
-                        {selectedProject.tasks.filter(t => t.status === 'done').map(task => (
-                          <TaskCard
-                            key={task.id}
-                            task={task}
-                            onStatusChange={handleTaskStatusChange}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteTask}
-                            users={allUsers}
-                            currentUserId={currentUserId}
-                          />
-                        ))}
+                  if (showMyTasksOnly && displayedTasks.length === 0) {
+                    return (
+                      <div className="card p-16 text-center">
+                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
+                          <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche assignee</h3>
+                        <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Vous n&apos;avez aucune tâche assignee dans ce projet</p>
+                        <button onClick={() => setShowMyTasksOnly(false)} className="btn btn-secondary">
+                          Voir toutes les tâches
+                        </button>
                       </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {/* À faire */}
+                      {displayedTasks.filter(t => t.status === 'todo').length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
+                            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--foreground-light)' }} />
+                            À faire ({displayedTasks.filter(t => t.status === 'todo').length})
+                          </h3>
+                          <div className="space-y-2">
+                            {displayedTasks.filter(t => t.status === 'todo').map(task => (
+                              <TaskCard
+                                key={task.id}
+                                task={task}
+                                onStatusChange={handleTaskStatusChange}
+                                onEdit={handleEditTask}
+                                onDelete={handleDeleteTask}
+                                users={allUsers}
+                                currentUserId={currentUserId}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* En cours */}
+                      {displayedTasks.filter(t => t.status === 'in_progress').length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
+                            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--warning)' }} />
+                            En cours ({displayedTasks.filter(t => t.status === 'in_progress').length})
+                          </h3>
+                          <div className="space-y-2">
+                            {displayedTasks.filter(t => t.status === 'in_progress').map(task => (
+                              <TaskCard
+                                key={task.id}
+                                task={task}
+                                onStatusChange={handleTaskStatusChange}
+                                onEdit={handleEditTask}
+                                onDelete={handleDeleteTask}
+                                users={allUsers}
+                                currentUserId={currentUserId}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Terminées */}
+                      {displayedTasks.filter(t => t.status === 'done').length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
+                            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
+                            Terminées ({displayedTasks.filter(t => t.status === 'done').length})
+                          </h3>
+                          <div className="space-y-2">
+                            {displayedTasks.filter(t => t.status === 'done').map(task => (
+                              <TaskCard
+                                key={task.id}
+                                task={task}
+                                onStatusChange={handleTaskStatusChange}
+                                onEdit={handleEditTask}
+                                onDelete={handleDeleteTask}
+                                users={allUsers}
+                                currentUserId={currentUserId}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              )) : (
+                  );
+                })() : (
                 /* Corrections Tab */
                 <CorrectionsList
                   corrections={getProjectCorrections(selectedProject.id)}
