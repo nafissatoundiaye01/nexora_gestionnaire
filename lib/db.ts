@@ -351,7 +351,7 @@ export async function createCorrection(correction: Omit<Correction, 'id' | 'crea
       status: correction.status,
       priority: correction.priority,
       assigned_to: correction.assignedTo,
-      reported_by: correction.reportedBy,
+      created_by: correction.createdBy,
     })
     .select()
     .single();
