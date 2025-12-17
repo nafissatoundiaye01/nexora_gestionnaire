@@ -142,13 +142,16 @@ export default function CustomDatePicker({
             w-9 h-9 rounded-lg text-sm font-medium
             transition-all duration-150
             flex items-center justify-center
-            ${disabled ? 'opacity-30 cursor-not-allowed' : 'hover:bg-indigo-100 cursor-pointer'}
-            ${selected ? 'bg-indigo-500 text-white hover:bg-indigo-600' : ''}
-            ${today && !selected ? 'ring-2 ring-indigo-500 ring-inset' : ''}
+            ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
+            ${today && !selected ? 'ring-2 ring-inset' : ''}
           `}
           style={{
             color: selected ? 'white' : disabled ? 'var(--foreground-light)' : 'var(--foreground)',
+            backgroundColor: selected ? 'var(--primary)' : 'transparent',
+            ringColor: today && !selected ? 'var(--primary)' : undefined,
           }}
+          onMouseEnter={(e) => !disabled && !selected && (e.currentTarget.style.backgroundColor = 'var(--primary-bg)')}
+          onMouseLeave={(e) => !disabled && !selected && (e.currentTarget.style.backgroundColor = 'transparent')}
         >
           {day}
         </button>
@@ -203,7 +206,8 @@ export default function CustomDatePicker({
             {value && (
               <span
                 onClick={handleClear}
-                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                className="p-1 rounded-full transition-colors"
+                style={{ cursor: 'pointer' }}
               >
                 <svg
                   className="w-4 h-4"
@@ -241,7 +245,10 @@ export default function CustomDatePicker({
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ backgroundColor: 'transparent' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--background-secondary)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <svg
                   className="w-5 h-5"
@@ -259,7 +266,10 @@ export default function CustomDatePicker({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ backgroundColor: 'transparent' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--background-secondary)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 <svg
                   className="w-5 h-5"

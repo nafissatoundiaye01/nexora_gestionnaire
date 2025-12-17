@@ -278,7 +278,7 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(8px);
           padding: 20px;
         }
@@ -286,18 +286,18 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
         .change-password-modal {
           width: 100%;
           max-width: 480px;
-          background: #1a1a2e;
+          background: var(--background-white);
           border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--border);
           overflow: hidden;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
         .change-password-header {
           padding: 32px 32px 24px;
           text-align: center;
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          background: var(--primary-bg);
+          border-bottom: 1px solid var(--border);
         }
 
         .change-password-icon {
@@ -320,23 +320,23 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
         .change-password-header h2 {
           font-size: 22px;
           font-weight: 700;
-          color: white;
+          color: var(--foreground);
           margin-bottom: 8px;
         }
 
         .change-password-header p {
           font-size: 14px;
-          color: rgba(255, 255, 255, 0.6);
+          color: var(--foreground-muted);
           line-height: 1.5;
         }
 
         .change-password-email {
           margin-top: 12px;
           padding: 8px 16px;
-          background: rgba(255, 255, 255, 0.05);
+          background: var(--background-secondary);
           border-radius: 8px;
           font-size: 13px;
-          color: #a5b4fc;
+          color: var(--primary);
           display: inline-block;
         }
 
@@ -346,21 +346,21 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           gap: 12px;
           margin: 16px 24px 0;
           padding: 14px 18px;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.2);
+          background: var(--danger-bg);
+          border: 1px solid var(--danger);
           border-radius: 12px;
         }
 
         .change-password-error svg {
           width: 20px;
           height: 20px;
-          color: #f87171;
+          color: var(--danger);
           flex-shrink: 0;
         }
 
         .change-password-error span {
           font-size: 14px;
-          color: #fca5a5;
+          color: var(--danger);
         }
 
         .change-password-form {
@@ -374,7 +374,7 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           display: block;
           font-size: 13px;
           font-weight: 500;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--foreground-muted);
           margin-bottom: 8px;
         }
 
@@ -388,21 +388,21 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           width: 100%;
           padding: 14px 48px 14px 16px;
           font-size: 15px;
-          color: white;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
+          color: var(--foreground);
+          background: var(--background-secondary);
+          border: 2px solid var(--border);
           border-radius: 12px;
           outline: none;
           transition: all 0.2s ease;
         }
 
         .change-password-input-wrapper input::placeholder {
-          color: rgba(255, 255, 255, 0.3);
+          color: var(--foreground-light);
         }
 
         .change-password-input-wrapper input:focus {
-          border-color: rgba(99, 102, 241, 0.5);
-          background: rgba(255, 255, 255, 0.08);
+          border-color: var(--primary);
+          background: var(--background-white);
         }
 
         .change-password-toggle {
@@ -417,13 +417,13 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           border: none;
           border-radius: 8px;
           cursor: pointer;
-          color: rgba(255, 255, 255, 0.4);
+          color: var(--foreground-muted);
           transition: all 0.2s ease;
         }
 
         .change-password-toggle:hover {
-          color: rgba(255, 255, 255, 0.7);
-          background: rgba(255, 255, 255, 0.05);
+          color: var(--foreground);
+          background: var(--background-secondary);
         }
 
         .change-password-toggle svg {
@@ -443,12 +443,12 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           align-items: center;
           gap: 8px;
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.4);
+          color: var(--foreground-light);
           transition: color 0.2s ease;
         }
 
         .requirement.valid {
-          color: #22c55e;
+          color: var(--success);
         }
 
         .requirement svg {
@@ -460,13 +460,13 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
         .change-password-mismatch {
           margin-top: 8px;
           font-size: 13px;
-          color: #f87171;
+          color: var(--danger);
         }
 
         .change-password-match {
           margin-top: 8px;
           font-size: 13px;
-          color: #22c55e;
+          color: var(--success);
         }
 
         .change-password-submit {
@@ -476,7 +476,7 @@ export default function ChangePasswordModal({ onChangePassword, userEmail }: Cha
           font-size: 16px;
           font-weight: 600;
           color: white;
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+          background: var(--primary);
           border: none;
           border-radius: 12px;
           cursor: pointer;

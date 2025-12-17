@@ -47,15 +47,16 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full animate-slide-in">
+      <div className="rounded-2xl shadow-xl max-w-md w-full animate-slide-in" style={{ backgroundColor: 'var(--background-white)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
             {project ? 'Modifier le projet' : 'Nouveau projet'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+            className="p-2 rounded-lg transition-all"
+            style={{ color: 'var(--foreground-muted)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -67,7 +68,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>
                 Nom du projet
               </label>
               <input
@@ -81,7 +82,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>
                 Description
               </label>
               <textarea
@@ -105,7 +106,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium mb-3" style={{ color: 'var(--foreground-muted)' }}>
                 Couleur
               </label>
               <div className="flex gap-2 flex-wrap">

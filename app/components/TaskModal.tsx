@@ -60,15 +60,16 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full animate-slide-in">
+      <div className="rounded-2xl shadow-xl max-w-md w-full animate-slide-in" style={{ backgroundColor: 'var(--background-white)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
             {task ? 'Modifier la tâche' : 'Nouvelle tâche'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+            className="p-2 rounded-lg transition-all"
+            style={{ color: 'var(--foreground-muted)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -80,7 +81,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>
                 Titre
               </label>
               <input
@@ -94,7 +95,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>
                 Description
               </label>
               <textarea
@@ -127,7 +128,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium mb-3" style={{ color: 'var(--foreground-muted)' }}>
                 Priorité
               </label>
               <div className="flex gap-2">
@@ -136,11 +137,12 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId }: 
                     key={opt.value}
                     type="button"
                     onClick={() => setPriority(opt.value)}
-                    className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-                      priority === opt.value
-                        ? 'bg-violet-50 border-2 border-violet-500 text-violet-700'
-                        : 'bg-gray-50 border-2 border-transparent text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className="flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2"
+                    style={{
+                      backgroundColor: priority === opt.value ? 'var(--primary-bg)' : 'var(--background-secondary)',
+                      border: priority === opt.value ? '2px solid var(--primary)' : '2px solid transparent',
+                      color: priority === opt.value ? 'var(--primary)' : 'var(--foreground-muted)',
+                    }}
                   >
                     <span
                       className="w-2 h-2 rounded-full"
