@@ -54,6 +54,7 @@ export default function Home() {
     updateCorrection,
     deleteCorrection,
     getProjectCorrections,
+    refresh: refreshCorrections,
   } = useCorrections();
 
   // Current user ID - from authenticated user
@@ -65,6 +66,7 @@ export default function Home() {
     addMeeting,
     updateMeeting,
     deleteMeeting,
+    refresh: refreshMeetings,
   } = useMeetings();
 
   const {
@@ -76,6 +78,7 @@ export default function Home() {
     markAsRead,
     markAllAsRead,
     deleteNotification: removeNotification,
+    refresh: refreshNotifications,
   } = useNotifications(currentUserId);
 
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -98,22 +101,38 @@ export default function Home() {
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
 
   // Load all users for task assignment
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/users');
-        if (response.ok) {
-          const users = await response.json();
-          setAllUsers(users);
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users');
+      if (response.ok) {
+        const users = await response.json();
+        setAllUsers(users);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  useEffect(() => {
     if (isAuthenticated) {
       fetchUsers();
     }
   }, [isAuthenticated]);
+
+  // Auto-refresh data every 30 seconds
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      refresh();
+      refreshCorrections();
+      refreshMeetings();
+      refreshNotifications();
+      fetchUsers();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refresh, refreshCorrections, refreshMeetings, refreshNotifications]);
 
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
@@ -246,8 +265,19 @@ export default function Home() {
 
   const handleSync = async () => {
     setIsSyncing(true);
-    await refresh();
-    setTimeout(() => setIsSyncing(false), 1000);
+    try {
+      await Promise.all([
+        refresh(),
+        refreshCorrections(),
+        refreshMeetings(),
+        refreshNotifications(),
+        fetchUsers(),
+      ]);
+    } catch (error) {
+      console.error('Erreur lors de la synchronisation:', error);
+    } finally {
+      setTimeout(() => setIsSyncing(false), 500);
+    }
   };
 
   // Show loading while checking auth
