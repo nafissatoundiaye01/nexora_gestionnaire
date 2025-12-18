@@ -201,19 +201,30 @@ export default function Home() {
 
   const handleSaveTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (editingTask) {
-      updateTask(editingTask.id, taskData);
+      await updateTask(editingTask.id, taskData);
+      // Notify if task is assigned to someone new
+      if (currentUserId && selectedProject && taskData.assignedTo && taskData.assignedTo !== currentUserId && taskData.assignedTo !== editingTask.assignedTo) {
+        await addNotification(
+          'task_assigned',
+          'Tâche assignée',
+          `La tâche "${taskData.title}" vous a été assignée sur le projet "${selectedProject.name}"`,
+          taskData.assignedTo,
+          { projectId: taskData.projectId, taskId: editingTask.id }
+        );
+      }
     } else {
       const newTask = await addTask(taskData);
-      // Send notification to all team members
       if (currentUserId && newTask && selectedProject) {
-        await notifyAllUsers(
-          'task_created',
-          'Nouvelle tâche créée',
-          `La tâche "${taskData.title}" a été ajoutée au projet "${selectedProject.name}"`,
-          currentUserId,
-          teamMembers.map(m => m.id),
-          { projectId: taskData.projectId, taskId: newTask.id }
-        );
+        // Notify assigned user
+        if (taskData.assignedTo && taskData.assignedTo !== currentUserId) {
+          await addNotification(
+            'task_assigned',
+            'Tâche assignée',
+            `La tâche "${taskData.title}" vous a été assignée sur le projet "${selectedProject.name}"`,
+            taskData.assignedTo,
+            { projectId: taskData.projectId, taskId: newTask.id }
+          );
+        }
       }
     }
   };
