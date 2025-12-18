@@ -118,6 +118,13 @@ export default function Home() {
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
 
+  // Filter tasks for "My Tasks" feature
+  const displayedProjectTasks = selectedProject
+    ? (showMyTasksOnly
+        ? selectedProject.tasks.filter(t => t.assignedTo === currentUserId)
+        : selectedProject.tasks)
+    : [];
+
   // Filter projects based on search query and status filter
   const filteredProjects = projectsWithProgress.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1072,118 +1079,105 @@ export default function Home() {
               {/* Tab Content */}
               {projectTab === 'tasks' ? (
                 /* Tasks */
-                (() => {
-                  const displayedTasks = showMyTasksOnly
-                    ? selectedProject.tasks.filter(t => t.assignedTo === currentUserId)
-                    : selectedProject.tasks;
-
-                  if (selectedProject.tasks.length === 0) {
-                    return (
-                      <div className="card p-16 text-center">
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--primary-bg)' }}>
-                          <svg className="w-10 h-10" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                          </svg>
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche</h3>
-                        <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Ajoutez des tâches pour suivre l&apos;avancement de votre projet</p>
-                        <button onClick={handleAddTask} className="btn btn-primary">
-                          Ajouter une tâche
-                        </button>
-                      </div>
-                    );
-                  }
-
-                  if (showMyTasksOnly && displayedTasks.length === 0) {
-                    return (
-                      <div className="card p-16 text-center">
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
-                          <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche assignee</h3>
-                        <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Vous n&apos;avez aucune tâche assignee dans ce projet</p>
-                        <button onClick={() => setShowMyTasksOnly(false)} className="btn btn-secondary">
-                          Voir toutes les tâches
-                        </button>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-6">
-                      {/* À faire */}
-                      {displayedTasks.filter(t => t.status === 'todo').length > 0 && (
-                        <div>
-                          <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
-                            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--foreground-light)' }} />
-                            À faire ({displayedTasks.filter(t => t.status === 'todo').length})
-                          </h3>
-                          <div className="space-y-2">
-                            {displayedTasks.filter(t => t.status === 'todo').map(task => (
-                              <TaskCard
-                                key={task.id}
-                                task={task}
-                                onStatusChange={handleTaskStatusChange}
-                                onEdit={handleEditTask}
-                                onDelete={handleDeleteTask}
-                                users={allUsers}
-                                currentUserId={currentUserId}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* En cours */}
-                      {displayedTasks.filter(t => t.status === 'in_progress').length > 0 && (
-                        <div>
-                          <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
-                            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--warning)' }} />
-                            En cours ({displayedTasks.filter(t => t.status === 'in_progress').length})
-                          </h3>
-                          <div className="space-y-2">
-                            {displayedTasks.filter(t => t.status === 'in_progress').map(task => (
-                              <TaskCard
-                                key={task.id}
-                                task={task}
-                                onStatusChange={handleTaskStatusChange}
-                                onEdit={handleEditTask}
-                                onDelete={handleDeleteTask}
-                                users={allUsers}
-                                currentUserId={currentUserId}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Terminées */}
-                      {displayedTasks.filter(t => t.status === 'done').length > 0 && (
-                        <div>
-                          <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
-                            <span className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
-                            Terminées ({displayedTasks.filter(t => t.status === 'done').length})
-                          </h3>
-                          <div className="space-y-2">
-                            {displayedTasks.filter(t => t.status === 'done').map(task => (
-                              <TaskCard
-                                key={task.id}
-                                task={task}
-                                onStatusChange={handleTaskStatusChange}
-                                onEdit={handleEditTask}
-                                onDelete={handleDeleteTask}
-                                users={allUsers}
-                                currentUserId={currentUserId}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                selectedProject.tasks.length === 0 ? (
+                  <div className="card p-16 text-center">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--primary-bg)' }}>
+                      <svg className="w-10 h-10" style={{ color: 'var(--primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
                     </div>
-                  );
-                })() : (
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche</h3>
+                    <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Ajoutez des tâches pour suivre l&apos;avancement de votre projet</p>
+                    <button onClick={handleAddTask} className="btn btn-primary">
+                      Ajouter une tâche
+                    </button>
+                  </div>
+                ) : showMyTasksOnly && displayedProjectTasks.length === 0 ? (
+                  <div className="card p-16 text-center">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
+                      <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche assignee</h3>
+                    <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Vous n&apos;avez aucune tâche assignee dans ce projet</p>
+                    <button onClick={() => setShowMyTasksOnly(false)} className="btn btn-secondary">
+                      Voir toutes les tâches
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* À faire */}
+                    {displayedProjectTasks.filter(t => t.status === 'todo').length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
+                          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--foreground-light)' }} />
+                          À faire ({displayedProjectTasks.filter(t => t.status === 'todo').length})
+                        </h3>
+                        <div className="space-y-2">
+                          {displayedProjectTasks.filter(t => t.status === 'todo').map(task => (
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              onStatusChange={handleTaskStatusChange}
+                              onEdit={handleEditTask}
+                              onDelete={handleDeleteTask}
+                              users={allUsers}
+                              currentUserId={currentUserId}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* En cours */}
+                    {displayedProjectTasks.filter(t => t.status === 'in_progress').length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
+                          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--warning)' }} />
+                          En cours ({displayedProjectTasks.filter(t => t.status === 'in_progress').length})
+                        </h3>
+                        <div className="space-y-2">
+                          {displayedProjectTasks.filter(t => t.status === 'in_progress').map(task => (
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              onStatusChange={handleTaskStatusChange}
+                              onEdit={handleEditTask}
+                              onDelete={handleDeleteTask}
+                              users={allUsers}
+                              currentUserId={currentUserId}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Terminées */}
+                    {displayedProjectTasks.filter(t => t.status === 'done').length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide mb-3 flex items-center gap-2" style={{ color: 'var(--foreground-muted)' }}>
+                          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--success)' }} />
+                          Terminées ({displayedProjectTasks.filter(t => t.status === 'done').length})
+                        </h3>
+                        <div className="space-y-2">
+                          {displayedProjectTasks.filter(t => t.status === 'done').map(task => (
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              onStatusChange={handleTaskStatusChange}
+                              onEdit={handleEditTask}
+                              onDelete={handleDeleteTask}
+                              users={allUsers}
+                              currentUserId={currentUserId}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              ) : (
                 /* Corrections Tab */
                 <CorrectionsList
                   corrections={getProjectCorrections(selectedProject.id)}
