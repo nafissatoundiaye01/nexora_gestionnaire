@@ -424,7 +424,7 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Parametres
+                      Paramètres
                     </button>
                     <button
                       onClick={() => {
@@ -437,7 +437,7 @@ export default function Home() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      Deconnexion
+                      Déconnexion
                     </button>
                   </div>
                 </div>
@@ -462,8 +462,8 @@ export default function Home() {
                 for (const attendeeId of attendeeIds) {
                   await addNotification(
                     'meeting_scheduled',
-                    'Nouvelle reunion',
-                    `Vous etes invite a la reunion "${meeting.title}" le ${new Date(meeting.date).toLocaleDateString('fr-FR')} de ${meeting.startTime} a ${meeting.endTime}`,
+                    'Nouvelle réunion',
+                    `Vous êtes invité à la réunion "${meeting.title}" le ${new Date(meeting.date).toLocaleDateString('fr-FR')} de ${meeting.startTime} a ${meeting.endTime}`,
                     attendeeId,
                     { meetingId: meeting.id }
                   );
@@ -1073,7 +1073,7 @@ export default function Home() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                       </svg>
-                      Taches ({selectedProject.tasks.length})
+                      Tâches ({selectedProject.tasks.length})
                     </span>
                   </button>
                   <button
@@ -1088,12 +1088,12 @@ export default function Home() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
-                      Points a rectifier ({getProjectCorrections(selectedProject.id).length})
+                      Points à rectifier ({getProjectCorrections(selectedProject.id).length})
                     </span>
                   </button>
                 </div>
 
-                {/* Filtre Mes taches */}
+                {/* Filtre Mes tâches */}
                 {projectTab === 'tasks' && (
                   <button
                     onClick={() => setShowMyTasksOnly(!showMyTasksOnly)}
@@ -1107,7 +1107,7 @@ export default function Home() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    Mes taches
+                    Mes tâches
                     {showMyTasksOnly && (
                       <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
                         {selectedProject.tasks.filter(t => t.assignedTo === currentUserId).length}
@@ -1140,8 +1140,8 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche assignee</h3>
-                    <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Vous n&apos;avez aucune tâche assignee dans ce projet</p>
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche assignée</h3>
+                    <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Vous n&apos;avez aucune tâche assignée dans ce projet</p>
                     <button onClick={() => setShowMyTasksOnly(false)} className="btn btn-secondary">
                       Voir toutes les tâches
                     </button>
@@ -1283,7 +1283,7 @@ export default function Home() {
       <ConfirmModal
         isOpen={deleteProjectConfirm.isOpen}
         title="Supprimer le projet"
-        message={`Etes-vous sur de vouloir supprimer le projet "${deleteProjectConfirm.project?.name}" et toutes ses taches ? Cette action est irreversible.`}
+        message={`Êtes-vous sûr de vouloir supprimer le projet "${deleteProjectConfirm.project?.name}" et toutes ses tâches ? Cette action est irréversible.`}
         confirmLabel="Supprimer"
         onConfirm={confirmDeleteProject}
         onCancel={() => setDeleteProjectConfirm({ isOpen: false, project: null })}

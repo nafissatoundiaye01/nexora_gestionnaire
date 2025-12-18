@@ -67,7 +67,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
             {/* Tagline */}
             <p className="login-tagline">
-              Gerez vos projets et taches<br />avec simplicite et efficacite
+              Gérez vos projets et tâches<br />avec simplicité et efficacité
             </p>
 
             {/* Features */}

@@ -133,8 +133,8 @@ export default function TaskCard({ task, onStatusChange, onEdit, onDelete, users
 
       <ConfirmModal
         isOpen={showDeleteConfirm}
-        title="Supprimer la tache"
-        message={`Etes-vous sur de vouloir supprimer la tache "${task.title}" ? Cette action est irreversible.`}
+        title="Supprimer la tâche"
+        message={`Êtes-vous sûr de vouloir supprimer la tâche "${task.title}" ? Cette action est irréversible.`}
         confirmLabel="Supprimer"
         onConfirm={() => {
           onDelete(task.id);

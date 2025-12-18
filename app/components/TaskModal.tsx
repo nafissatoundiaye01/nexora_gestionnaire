@@ -66,7 +66,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, projectId, us
 
   // Build user options for assignment
   const userOptions = [
-    { value: '', label: 'Non assignee' },
+    { value: '', label: 'Non assignée' },
     ...users.map(user => ({
       value: user.id,
       label: user.id === currentUserId ? `${user.name} (Moi)` : user.name,

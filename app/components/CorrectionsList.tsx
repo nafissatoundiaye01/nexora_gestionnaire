@@ -162,7 +162,7 @@ export default function CorrectionsList({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Points a rectifier ({pendingCorrections.length})
+            Points à rectifier ({pendingCorrections.length})
           </h3>
 
           {/* Filter buttons */}
@@ -398,7 +398,7 @@ export default function CorrectionsList({
             <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p>{filter === 'mine' ? 'Aucun point vous est assigne' : 'Aucun point a rectifier'}</p>
+            <p>{filter === 'mine' ? 'Aucun point vous est assigne' : 'Aucun point à rectifier'}</p>
           </div>
         )}
       </div>
@@ -436,7 +436,7 @@ export default function CorrectionsList({
 
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
-        title="Supprimer le point a rectifier"
+        title="Supprimer le point à rectifier"
         message={`Etes-vous sur de vouloir supprimer "${deleteConfirm.correction?.title}" ? Cette action est irreversible.`}
         confirmLabel="Supprimer"
         onConfirm={async () => {

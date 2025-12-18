@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching notifications:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation des notifications' },
+      { error: 'Erreur lors de la récupération des notifications' },
       { status: 500 }
     );
   }
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error creating notification:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erreur lors de la creation de la notification' },
+      { error: error instanceof Error ? error.message : 'Erreur lors de la création de la notification' },
       { status: 500 }
     );
   }
@@ -45,7 +45,7 @@ export async function PUT(request: Request) {
   } catch (error) {
     console.error('Error updating notifications:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise a jour des notifications' },
+      { error: 'Erreur lors de la mise à jour des notifications' },
       { status: 500 }
     );
   }

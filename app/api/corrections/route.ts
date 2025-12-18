@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching corrections:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation des corrections' },
+      { error: 'Erreur lors de la récupération des corrections' },
       { status: 500 }
     );
   }
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating correction:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erreur lors de la creation de la correction' },
+      { error: error instanceof Error ? error.message : 'Erreur lors de la création de la correction' },
       { status: 500 }
     );
   }

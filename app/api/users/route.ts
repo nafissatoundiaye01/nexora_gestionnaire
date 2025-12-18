@@ -10,7 +10,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation des utilisateurs' },
+      { error: 'Erreur lors de la récupération des utilisateurs' },
       { status: 500 }
     );
   }

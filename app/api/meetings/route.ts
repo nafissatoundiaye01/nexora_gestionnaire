@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching meetings:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation des reunions' },
+      { error: 'Erreur lors de la récupération des réunions' },
       { status: 500 }
     );
   }
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating meeting:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Erreur lors de la creation de la reunion' },
+      { error: error instanceof Error ? error.message : 'Erreur lors de la création de la réunion' },
       { status: 500 }
     );
   }

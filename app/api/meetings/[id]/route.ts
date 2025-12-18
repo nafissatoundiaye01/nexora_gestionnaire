@@ -9,13 +9,13 @@ export async function GET(
     const { id } = await params;
     const meeting = await getMeeting(id);
     if (!meeting) {
-      return NextResponse.json({ error: 'Reunion non trouvee' }, { status: 404 });
+      return NextResponse.json({ error: 'Réunion non trouvée' }, { status: 404 });
     }
     return NextResponse.json(meeting);
   } catch (error) {
     console.error('Error fetching meeting:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation de la reunion' },
+      { error: 'Erreur lors de la récupération de la réunion' },
       { status: 500 }
     );
   }
@@ -30,13 +30,13 @@ export async function PUT(
     const body = await request.json();
     const meeting = await updateMeeting(id, body);
     if (!meeting) {
-      return NextResponse.json({ error: 'Reunion non trouvee' }, { status: 404 });
+      return NextResponse.json({ error: 'Réunion non trouvée' }, { status: 404 });
     }
     return NextResponse.json(meeting);
   } catch (error) {
     console.error('Error updating meeting:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise a jour de la reunion' },
+      { error: 'Erreur lors de la mise à jour de la réunion' },
       { status: 500 }
     );
   }
@@ -50,13 +50,13 @@ export async function DELETE(
     const { id } = await params;
     const success = await deleteMeeting(id);
     if (!success) {
-      return NextResponse.json({ error: 'Reunion non trouvee' }, { status: 404 });
+      return NextResponse.json({ error: 'Réunion non trouvée' }, { status: 404 });
     }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting meeting:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression de la reunion' },
+      { error: 'Erreur lors de la suppression de la réunion' },
       { status: 500 }
     );
   }

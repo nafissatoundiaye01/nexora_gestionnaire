@@ -94,7 +94,7 @@ export default function MeetingModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
-            {meeting ? 'Modifier la reunion' : 'Nouvelle reunion'}
+            {meeting ? 'Modifier la réunion' : 'Nouvelle réunion'}
           </h2>
           <button
             onClick={onClose}
@@ -120,7 +120,7 @@ export default function MeetingModal({
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 className="input"
-                placeholder="Titre de la reunion"
+                placeholder="Titre de la réunion"
                 required
               />
             </div>
@@ -135,7 +135,7 @@ export default function MeetingModal({
                 onChange={e => setDescription(e.target.value)}
                 className="input resize-none"
                 rows={3}
-                placeholder="Description de la reunion..."
+                placeholder="Description de la réunion..."
               />
             </div>
 
@@ -157,7 +157,7 @@ export default function MeetingModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>
-                  Heure de debut *
+                  Heure de début *
                 </label>
                 <input
                   type="time"
@@ -191,14 +191,14 @@ export default function MeetingModal({
                 value={location}
                 onChange={e => setLocation(e.target.value)}
                 className="input"
-                placeholder="Salle de reunion, lien visio..."
+                placeholder="Salle de réunion, lien visio..."
               />
             </div>
 
             {/* Attendees */}
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>
-                Participants ({attendees.length} selectionnes)
+                Participants ({attendees.length} sélectionnés)
               </label>
               <div
                 className="border rounded-lg p-3 max-h-48 overflow-y-auto"
@@ -253,7 +253,7 @@ export default function MeetingModal({
               className="btn btn-primary flex-1"
               disabled={isSubmitting || !title.trim() || !date || attendees.length === 0}
             >
-              {isSubmitting ? 'Enregistrement...' : meeting ? 'Enregistrer' : 'Creer la reunion'}
+              {isSubmitting ? 'Enregistrement...' : meeting ? 'Enregistrer' : 'Créer la réunion'}
             </button>
           </div>
         </form>

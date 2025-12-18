@@ -36,7 +36,7 @@ export function useMeetings(userId?: string) {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || 'Erreur lors de la creation de la reunion');
+        throw new Error(error.error || 'Erreur lors de la création de la réunion');
       }
 
       const newMeeting = await res.json();
@@ -60,7 +60,7 @@ export function useMeetings(userId?: string) {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || 'Erreur lors de la mise a jour de la reunion');
+        throw new Error(error.error || 'Erreur lors de la mise à jour de la réunion');
       }
 
       const updatedMeeting = await res.json();
@@ -80,7 +80,7 @@ export function useMeetings(userId?: string) {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || 'Erreur lors de la suppression de la reunion');
+        throw new Error(error.error || 'Erreur lors de la suppression de la réunion');
       }
 
       setMeetings(prev => prev.filter(m => m.id !== id));

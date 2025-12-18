@@ -177,7 +177,7 @@ export default function CalendarView({
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Calendrier</h1>
           <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
-            Visualisez vos taches, echeances et reunions
+            Visualisez vos tâches, échéances et réunions
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function CalendarView({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nouvelle reunion
+            Nouvelle réunion
           </button>
           <div className="flex items-center gap-2">
             <button
@@ -339,11 +339,11 @@ export default function CalendarView({
           {/* Upcoming Meetings */}
           <div>
             <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
-              Prochaines reunions
+              Prochaines réunions
             </h3>
             {upcomingMeetings.length === 0 ? (
               <div className="text-center py-4">
-                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Aucune reunion prevue</p>
+                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Aucune réunion prévue</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -399,12 +399,12 @@ export default function CalendarView({
           {/* Upcoming Tasks */}
           <div className="pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
             <h3 className="font-semibold text-lg mb-4" style={{ color: 'var(--foreground)' }}>
-              Prochaines echeances
+              Prochaines échéances
             </h3>
 
             {upcomingTasks.length === 0 ? (
               <div className="text-center py-4">
-                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Aucune echeance proche</p>
+                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Aucune échéance proche</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -455,7 +455,7 @@ export default function CalendarView({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
-                <span className="text-sm" style={{ color: 'var(--foreground)' }}>Reunion</span>
+                <span className="text-sm" style={{ color: 'var(--foreground)' }}>Réunion</span>
               </div>
               {projects.slice(0, 4).map(project => (
                 <div key={project.id} className="flex items-center gap-2">
@@ -491,8 +491,8 @@ export default function CalendarView({
       {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
-        title="Supprimer la reunion"
-        message={`Etes-vous sur de vouloir supprimer la reunion "${deleteConfirm.meeting?.title}" ? Cette action est irreversible.`}
+        title="Supprimer la réunion"
+        message={`Êtes-vous sûr de vouloir supprimer la réunion "${deleteConfirm.meeting?.title}" ? Cette action est irréversible.`}
         confirmLabel="Supprimer"
         onConfirm={handleDeleteMeeting}
         onCancel={() => setDeleteConfirm({ isOpen: false, meeting: null })}
