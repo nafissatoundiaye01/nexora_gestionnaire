@@ -162,6 +162,43 @@ export default function Home() {
   const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long' };
   const formattedDate = today.toLocaleDateString('fr-FR', dateOptions);
 
+  // Calculate weekly progress data for the chart
+  const getWeeklyProgressData = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+    const weekData = [];
+    const daysOfWeek = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(now);
+      date.setDate(now.getDate() + mondayOffset + i);
+      date.setHours(0, 0, 0, 0);
+
+      const nextDate = new Date(date);
+      nextDate.setDate(date.getDate() + 1);
+
+      // Count tasks completed on this day
+      const tasksCompletedOnDay = tasks.filter(task => {
+        if (task.status !== 'done' || !task.updatedAt) return false;
+        const taskDate = new Date(task.updatedAt);
+        return taskDate >= date && taskDate < nextDate;
+      }).length;
+
+      weekData.push({
+        day: daysOfWeek[i],
+        completed: tasksCompletedOnDay,
+        isToday: date.toDateString() === now.toDateString(),
+      });
+    }
+
+    return weekData;
+  };
+
+  const weeklyProgressData = getWeeklyProgressData();
+  const maxCompleted = Math.max(...weeklyProgressData.map(d => d.completed), 1);
+
   const handleAddProject = () => {
     setEditingProject(null);
     setIsProjectModalOpen(true);
@@ -680,7 +717,7 @@ export default function Home() {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h3 className="font-semibold text-lg" style={{ color: 'var(--foreground)' }}>Progression</h3>
-                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Évolution de ce mois</p>
+                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Tâches complétées cette semaine</p>
                     </div>
                     <button className="icon-btn">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -691,20 +728,37 @@ export default function Home() {
 
                   {/* Simple Bar Chart */}
                   <div className="flex items-end gap-3 h-48 px-4">
-                    {[65, 45, 80, 55, 90, 70, 85].map((height, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                        <div
-                          className="w-full rounded-lg transition-all duration-500"
-                          style={{
-                            height: `${height}%`,
-                            background: i === 4 ? 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)' : 'linear-gradient(180deg, #818cf8 0%, #6366f1 100%)',
-                          }}
-                        />
-                        <span className="text-xs" style={{ color: 'var(--foreground-light)' }}>
-                          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][i]}
-                        </span>
-                      </div>
-                    ))}
+                    {weeklyProgressData.map((data, i) => {
+                      const heightPercent = maxCompleted > 0 ? (data.completed / maxCompleted) * 100 : 0;
+                      const minHeight = data.completed > 0 ? Math.max(heightPercent, 10) : 5;
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                          <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
+                            {data.completed}
+                          </span>
+                          <div
+                            className="w-full rounded-lg transition-all duration-500"
+                            style={{
+                              height: `${minHeight}%`,
+                              background: data.isToday
+                                ? 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)'
+                                : data.completed > 0
+                                  ? 'linear-gradient(180deg, #818cf8 0%, #6366f1 100%)'
+                                  : 'var(--border-light)',
+                            }}
+                          />
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: data.isToday ? 'var(--warning)' : 'var(--foreground-light)',
+                              fontWeight: data.isToday ? '600' : '400',
+                            }}
+                          >
+                            {data.day}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
