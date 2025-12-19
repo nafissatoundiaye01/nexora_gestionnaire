@@ -727,19 +727,20 @@ export default function Home() {
                   </div>
 
                   {/* Simple Bar Chart */}
-                  <div className="flex items-end gap-3 h-48 px-4">
+                  <div className="flex items-end gap-3 px-4" style={{ height: '180px' }}>
                     {weeklyProgressData.map((data, i) => {
                       const heightPercent = maxCompleted > 0 ? (data.completed / maxCompleted) * 100 : 0;
-                      const minHeight = data.completed > 0 ? Math.max(heightPercent, 10) : 5;
+                      const barHeight = data.completed > 0 ? Math.max(heightPercent, 15) : 8;
                       return (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                          <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
+                        <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                          <span className="text-xs font-medium mb-1" style={{ color: 'var(--foreground)' }}>
                             {data.completed}
                           </span>
                           <div
-                            className="w-full rounded-lg transition-all duration-500"
+                            className="w-full rounded-t-lg transition-all duration-500"
                             style={{
-                              height: `${minHeight}%`,
+                              height: `${barHeight}%`,
+                              minHeight: '12px',
                               background: data.isToday
                                 ? 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)'
                                 : data.completed > 0
@@ -747,18 +748,25 @@ export default function Home() {
                                   : 'var(--border-light)',
                             }}
                           />
-                          <span
-                            className="text-xs"
-                            style={{
-                              color: data.isToday ? 'var(--warning)' : 'var(--foreground-light)',
-                              fontWeight: data.isToday ? '600' : '400',
-                            }}
-                          >
-                            {data.day}
-                          </span>
                         </div>
                       );
                     })}
+                  </div>
+                  {/* Days labels */}
+                  <div className="flex gap-3 px-4 mt-2">
+                    {weeklyProgressData.map((data, i) => (
+                      <div key={i} className="flex-1 text-center">
+                        <span
+                          className="text-xs"
+                          style={{
+                            color: data.isToday ? 'var(--warning)' : 'var(--foreground-light)',
+                            fontWeight: data.isToday ? '600' : '400',
+                          }}
+                        >
+                          {data.day}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
