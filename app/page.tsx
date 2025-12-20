@@ -20,6 +20,7 @@ import NotificationsDropdown from './components/NotificationsDropdown';
 import LoginPage from './components/LoginPage';
 import ChangePasswordModal from './components/ChangePasswordModal';
 import ConfirmModal from './components/ConfirmModal';
+import ProjectReportModal from './components/ProjectReportModal';
 
 export default function Home() {
   // Authentication
@@ -99,6 +100,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'on_hold'>('all');
   const [allUsers, setAllUsers] = useState<Omit<User, 'password'>[]>([]);
   const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
+  const [reportProject, setReportProject] = useState<ProjectWithProgress | null>(null);
 
   // Load all users for task assignment
   const fetchUsers = async () => {
@@ -207,6 +209,10 @@ export default function Home() {
   const handleEditProject = (project: ProjectWithProgress) => {
     setEditingProject(project);
     setIsProjectModalOpen(true);
+  };
+
+  const handleReportProject = (project: ProjectWithProgress) => {
+    setReportProject(project);
   };
 
   const handleSaveProject = async (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -535,6 +541,7 @@ export default function Home() {
                         onSelect={setSelectedProjectId}
                         onEdit={handleEditProject}
                         onDelete={handleDeleteProject}
+                        onReport={handleReportProject}
                       />
                     ))}
                   </div>
@@ -1043,6 +1050,7 @@ export default function Home() {
                       onSelect={setSelectedProjectId}
                       onEdit={handleEditProject}
                       onDelete={handleDeleteProject}
+                      onReport={handleReportProject}
                     />
                   ))}
                 </div>
@@ -1350,6 +1358,17 @@ export default function Home() {
         onConfirm={confirmDeleteProject}
         onCancel={() => setDeleteProjectConfirm({ isOpen: false, project: null })}
       />
+
+      {reportProject && (
+        <ProjectReportModal
+          isOpen={!!reportProject}
+          onClose={() => setReportProject(null)}
+          project={reportProject}
+          corrections={getProjectCorrections(reportProject.id)}
+          meetings={meetings}
+          users={allUsers}
+        />
+      )}
     </div>
   );
 }

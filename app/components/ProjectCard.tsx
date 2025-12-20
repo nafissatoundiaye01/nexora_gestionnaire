@@ -7,9 +7,10 @@ interface ProjectCardProps {
   onSelect: (id: string) => void;
   onEdit: (project: ProjectWithProgress) => void;
   onDelete: (id: string) => void;
+  onReport: (project: ProjectWithProgress) => void;
 }
 
-export default function ProjectCard({ project, onSelect, onEdit, onDelete }: ProjectCardProps) {
+export default function ProjectCard({ project, onSelect, onEdit, onDelete, onReport }: ProjectCardProps) {
   const statusConfig = {
     active: { label: 'Actif', class: 'badge-success' },
     completed: { label: 'Terminé', class: 'badge-primary' },
@@ -79,8 +80,18 @@ export default function ProjectCard({ project, onSelect, onEdit, onDelete }: Pro
         </div>
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
           <button
+            onClick={() => onReport(project)}
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+            title="Générer un rapport"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+          <button
             onClick={() => onEdit(project)}
             className="p-2 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+            title="Modifier"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -89,6 +100,7 @@ export default function ProjectCard({ project, onSelect, onEdit, onDelete }: Pro
           <button
             onClick={() => onDelete(project.id)}
             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            title="Supprimer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
