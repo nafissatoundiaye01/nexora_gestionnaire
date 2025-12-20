@@ -6,8 +6,10 @@ interface ConfirmModalProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  secondaryLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  onSecondary?: () => void;
   danger?: boolean;
 }
 
@@ -17,8 +19,10 @@ export default function ConfirmModal({
   message,
   confirmLabel = 'Confirmer',
   cancelLabel = 'Annuler',
+  secondaryLabel,
   onConfirm,
   onCancel,
+  onSecondary,
   danger = true,
 }: ConfirmModalProps) {
   if (!isOpen) return null;
@@ -60,6 +64,18 @@ export default function ConfirmModal({
           >
             {cancelLabel}
           </button>
+          {secondaryLabel && onSecondary && (
+            <button
+              onClick={onSecondary}
+              className="flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all"
+              style={{
+                backgroundColor: 'var(--background-secondary)',
+                color: 'var(--foreground)'
+              }}
+            >
+              {secondaryLabel}
+            </button>
+          )}
           <button
             onClick={onConfirm}
             className={`flex-1 px-4 py-2.5 rounded-lg font-medium text-sm text-white transition-all ${

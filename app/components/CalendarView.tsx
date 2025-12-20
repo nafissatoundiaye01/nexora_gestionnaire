@@ -39,6 +39,10 @@ export default function CalendarView({
     isOpen: false,
     meeting: null,
   });
+  const [joinConfirm, setJoinConfirm] = useState<{ isOpen: boolean; meeting: Meeting | null }>({
+    isOpen: false,
+    meeting: null,
+  });
 
   const monthNames = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -92,11 +96,53 @@ export default function CalendarView({
     setIsMeetingModalOpen(true);
   };
 
+  // Vérifie si la réunion est en cours ou a commencé il y a moins de 30 minutes
+  const isMeetingJoinable = (meeting: Meeting): boolean => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    // Si ce n'est pas aujourd'hui, pas joinable
+    if (meeting.date !== todayStr) {
+      return false;
+    }
+
+    // Parser l'heure de début de la réunion
+    const [hours, minutes] = meeting.startTime.split(':').map(Number);
+    const meetingStart = new Date(now);
+    meetingStart.setHours(hours, minutes, 0, 0);
+
+    // Parser l'heure de fin de la réunion
+    const [endHours, endMinutes] = meeting.endTime.split(':').map(Number);
+    const meetingEnd = new Date(now);
+    meetingEnd.setHours(endHours, endMinutes, 0, 0);
+
+    // La réunion est joinable si :
+    // - L'heure actuelle est >= heure de début ET <= heure de fin + 30 minutes
+    const thirtyMinutesAfterEnd = new Date(meetingEnd.getTime() + 30 * 60 * 1000);
+
+    return now >= meetingStart && now <= thirtyMinutesAfterEnd;
+  };
+
+  const handleJoinMeeting = () => {
+    if (joinConfirm.meeting?.location) {
+      // Ouvrir le lien de la réunion dans un nouvel onglet
+      window.open(joinConfirm.meeting.location, '_blank');
+    }
+    setJoinConfirm({ isOpen: false, meeting: null });
+  };
+
   const handleMeetingClick = (meeting: Meeting, e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditingMeeting(meeting);
-    setSelectedDate(meeting.date);
-    setIsMeetingModalOpen(true);
+
+    // Si la réunion est en cours ou passée de moins de 30 minutes et a un lien, proposer de participer
+    if (isMeetingJoinable(meeting) && meeting.location) {
+      setJoinConfirm({ isOpen: true, meeting });
+    } else {
+      // Sinon, ouvrir le modal de modification
+      setEditingMeeting(meeting);
+      setSelectedDate(meeting.date);
+      setIsMeetingModalOpen(true);
+    }
   };
 
   const handleSaveMeeting = async (meetingData: Omit<Meeting, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -352,11 +398,7 @@ export default function CalendarView({
                     key={meeting.id}
                     className="p-3 rounded-lg cursor-pointer transition-colors hover:opacity-80"
                     style={{ backgroundColor: 'var(--background-secondary)' }}
-                    onClick={() => {
-                      setEditingMeeting(meeting);
-                      setSelectedDate(meeting.date);
-                      setIsMeetingModalOpen(true);
-                    }}
+                    onClick={(e) => handleMeetingClick(meeting, e)}
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -496,6 +538,28 @@ export default function CalendarView({
         confirmLabel="Supprimer"
         onConfirm={handleDeleteMeeting}
         onCancel={() => setDeleteConfirm({ isOpen: false, meeting: null })}
+      />
+
+      {/* Join Meeting Confirmation Modal */}
+      <ConfirmModal
+        isOpen={joinConfirm.isOpen}
+        title="Rejoindre la réunion"
+        message={`La réunion "${joinConfirm.meeting?.title}" est en cours. Voulez-vous y participer ?`}
+        confirmLabel="Participer"
+        cancelLabel="Annuler"
+        secondaryLabel="Modifier"
+        danger={false}
+        onConfirm={handleJoinMeeting}
+        onCancel={() => setJoinConfirm({ isOpen: false, meeting: null })}
+        onSecondary={() => {
+          const meeting = joinConfirm.meeting;
+          setJoinConfirm({ isOpen: false, meeting: null });
+          if (meeting) {
+            setEditingMeeting(meeting);
+            setSelectedDate(meeting.date);
+            setIsMeetingModalOpen(true);
+          }
+        }}
       />
     </div>
   );
