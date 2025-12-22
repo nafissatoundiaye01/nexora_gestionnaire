@@ -99,7 +99,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'on_hold'>('all');
   const [allUsers, setAllUsers] = useState<Omit<User, 'password'>[]>([]);
-  const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
+  const [taskMemberFilter, setTaskMemberFilter] = useState<'all' | 'unassigned' | string>('all');
   const [reportProject, setReportProject] = useState<ProjectWithProgress | null>(null);
 
   // Load all users for task assignment
@@ -139,11 +139,13 @@ export default function Home() {
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
 
-  // Filter tasks for "My Tasks" feature
+  // Filter tasks by member
   const displayedProjectTasks = selectedProject
-    ? (showMyTasksOnly
-        ? selectedProject.tasks.filter(t => t.assignedTo === currentUserId)
-        : selectedProject.tasks)
+    ? selectedProject.tasks.filter(t => {
+        if (taskMemberFilter === 'all') return true;
+        if (taskMemberFilter === 'unassigned') return !t.assignedTo;
+        return t.assignedTo === taskMemberFilter;
+      })
     : [];
 
   // Filter projects based on search query and status filter
@@ -1163,27 +1165,38 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Filtre Mes tâches */}
+                {/* Filtre par membre */}
                 {projectTab === 'tasks' && (
-                  <button
-                    onClick={() => setShowMyTasksOnly(!showMyTasksOnly)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2`}
-                    style={{
-                      backgroundColor: showMyTasksOnly ? 'var(--primary)' : 'var(--background-white)',
-                      color: showMyTasksOnly ? 'white' : 'var(--foreground-muted)',
-                      border: showMyTasksOnly ? 'none' : '1px solid var(--border)',
-                    }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    Mes tâches
-                    {showMyTasksOnly && (
-                      <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-white/20">
-                        {selectedProject.tasks.filter(t => t.assignedTo === currentUserId).length}
+                    <select
+                      value={taskMemberFilter}
+                      onChange={(e) => setTaskMemberFilter(e.target.value)}
+                      className="px-3 py-2 rounded-lg font-medium transition-colors"
+                      style={{
+                        backgroundColor: taskMemberFilter !== 'all' ? 'var(--primary)' : 'var(--background-white)',
+                        color: taskMemberFilter !== 'all' ? 'white' : 'var(--foreground-muted)',
+                        border: taskMemberFilter !== 'all' ? 'none' : '1px solid var(--border)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="all" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Tous les membres</option>
+                      <option value="unassigned" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Non assigné</option>
+                      <option value={currentUserId} style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Mes tâches</option>
+                      {allUsers.filter(u => u.id !== currentUserId).map(user => (
+                        <option key={user.id} value={user.id} style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
+                    {taskMemberFilter !== 'all' && (
+                      <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--primary)', color: 'white' }}>
+                        {displayedProjectTasks.length}
                       </span>
                     )}
-                  </button>
+                  </div>
                 )}
               </div>
 
@@ -1203,16 +1216,24 @@ export default function Home() {
                       Ajouter une tâche
                     </button>
                   </div>
-                ) : showMyTasksOnly && displayedProjectTasks.length === 0 ? (
+                ) : taskMemberFilter !== 'all' && displayedProjectTasks.length === 0 ? (
                   <div className="card p-16 text-center">
                     <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--background-secondary)' }}>
                       <svg className="w-10 h-10" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Aucune tâche assignée</h3>
-                    <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>Vous n&apos;avez aucune tâche assignée dans ce projet</p>
-                    <button onClick={() => setShowMyTasksOnly(false)} className="btn btn-secondary">
+                    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                      {taskMemberFilter === 'unassigned' ? 'Aucune tâche non assignée' : 'Aucune tâche trouvée'}
+                    </h3>
+                    <p className="mb-6" style={{ color: 'var(--foreground-muted)' }}>
+                      {taskMemberFilter === 'unassigned'
+                        ? 'Toutes les tâches de ce projet sont assignées'
+                        : taskMemberFilter === currentUserId
+                          ? 'Vous n\'avez aucune tâche assignée dans ce projet'
+                          : 'Ce membre n\'a aucune tâche assignée dans ce projet'}
+                    </p>
+                    <button onClick={() => setTaskMemberFilter('all')} className="btn btn-secondary">
                       Voir toutes les tâches
                     </button>
                   </div>
