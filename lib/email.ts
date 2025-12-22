@@ -16,15 +16,21 @@ interface SendMeetingInviteParams {
   to: string;
   recipientName: string;
   meeting: MeetingEmailData;
+  isOrganizer?: boolean;
 }
 
-export async function sendMeetingInvite({ to, recipientName, meeting }: SendMeetingInviteParams) {
+export async function sendMeetingInvite({ to, recipientName, meeting, isOrganizer = false }: SendMeetingInviteParams) {
   const formattedDate = new Date(meeting.date).toLocaleDateString('fr-FR', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+
+  const headerTitle = isOrganizer ? 'Confirmation de réunion' : 'Invitation à une réunion';
+  const introMessage = isOrganizer
+    ? 'Votre réunion a été programmée avec succès.'
+    : `<strong>${meeting.organizerName}</strong> vous invite à participer à une réunion.`;
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -42,7 +48,7 @@ export async function sendMeetingInvite({ to, recipientName, meeting }: SendMeet
               <tr>
                 <td style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 32px 40px; text-align: center;">
                   <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
-                    Invitation à une réunion
+                    ${headerTitle}
                   </h1>
                 </td>
               </tr>
@@ -55,7 +61,7 @@ export async function sendMeetingInvite({ to, recipientName, meeting }: SendMeet
                   </p>
 
                   <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 1.6;">
-                    <strong>${meeting.organizerName}</strong> vous invite à participer à une réunion.
+                    ${introMessage}
                   </p>
 
                   <!-- Meeting Card -->
@@ -141,10 +147,14 @@ export async function sendMeetingInvite({ to, recipientName, meeting }: SendMeet
     </html>
   `;
 
+  const introTextMessage = isOrganizer
+    ? 'Votre réunion a été programmée avec succès.'
+    : `${meeting.organizerName} vous invite à participer à une réunion.`;
+
   const emailText = `
 Bonjour ${recipientName},
 
-${meeting.organizerName} vous invite à participer à une réunion.
+${introTextMessage}
 
 ${meeting.title}
 ${meeting.description ? `\n${meeting.description}\n` : ''}
@@ -155,11 +165,13 @@ ${meeting.location ? `Lieu : ${meeting.location}` : ''}
 Connectez-vous à Nexora Agenda pour consulter tous les détails.
   `.trim();
 
+  const subjectPrefix = isOrganizer ? 'Confirmation' : 'Invitation';
+
   try {
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'Nexora Agenda <noreply@resend.dev>',
       to: [to],
-      subject: `Invitation : ${meeting.title} - ${formattedDate}`,
+      subject: `${subjectPrefix} : ${meeting.title} - ${formattedDate}`,
       html: emailHtml,
       text: emailText,
     });
@@ -177,12 +189,12 @@ Connectez-vous à Nexora Agenda pour consulter tous les détails.
 }
 
 export async function sendMeetingInvites(
-  emails: { to: string; recipientName: string }[],
+  emails: { to: string; recipientName: string; isOrganizer?: boolean }[],
   meeting: MeetingEmailData
 ) {
   const results = await Promise.allSettled(
-    emails.map(({ to, recipientName }) =>
-      sendMeetingInvite({ to, recipientName, meeting })
+    emails.map(({ to, recipientName, isOrganizer }) =>
+      sendMeetingInvite({ to, recipientName, meeting, isOrganizer })
     )
   );
 

@@ -28,14 +28,14 @@ export async function POST(request: NextRequest) {
     const organizer = users.find(u => u.id === organizerId);
     const organizerName = organizer?.name || 'Un organisateur';
 
-    // Filter attendees (exclude organizer) and get their emails
+    // Get all attendees (including organizer) and their emails
     const attendeesToNotify = attendeeIds
-      .filter((id: string) => id !== organizerId)
       .map((id: string) => users.find(u => u.id === id))
       .filter((user): user is NonNullable<typeof user> => user !== undefined)
       .map(user => ({
         to: user.email,
         recipientName: user.name,
+        isOrganizer: user.id === organizerId,
       }));
 
     if (attendeesToNotify.length === 0) {
