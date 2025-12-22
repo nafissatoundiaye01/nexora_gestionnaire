@@ -100,6 +100,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'on_hold'>('all');
   const [allUsers, setAllUsers] = useState<Omit<User, 'password'>[]>([]);
   const [taskMemberFilter, setTaskMemberFilter] = useState<'all' | 'unassigned' | string>('all');
+  const [taskPrioritySort, setTaskPrioritySort] = useState<'none' | 'asc' | 'desc'>('none');
   const [reportProject, setReportProject] = useState<ProjectWithProgress | null>(null);
 
   // Load all users for task assignment
@@ -139,13 +140,22 @@ export default function Home() {
   const projectsWithProgress = getProjectsWithProgress();
   const selectedProject = projectsWithProgress.find(p => p.id === selectedProjectId);
 
-  // Filter tasks by member
+  // Priority order for sorting
+  const priorityOrder = { low: 1, medium: 2, high: 3 };
+
+  // Filter and sort tasks
   const displayedProjectTasks = selectedProject
-    ? selectedProject.tasks.filter(t => {
-        if (taskMemberFilter === 'all') return true;
-        if (taskMemberFilter === 'unassigned') return !t.assignedTo;
-        return t.assignedTo === taskMemberFilter;
-      })
+    ? selectedProject.tasks
+        .filter(t => {
+          if (taskMemberFilter === 'all') return true;
+          if (taskMemberFilter === 'unassigned') return !t.assignedTo;
+          return t.assignedTo === taskMemberFilter;
+        })
+        .sort((a, b) => {
+          if (taskPrioritySort === 'none') return 0;
+          const diff = priorityOrder[a.priority] - priorityOrder[b.priority];
+          return taskPrioritySort === 'asc' ? diff : -diff;
+        })
     : [];
 
   // Filter projects based on search query and status filter
@@ -1165,37 +1175,62 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Filtre par membre */}
+                {/* Filtres des tâches */}
                 {projectTab === 'tasks' && (
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <select
-                      value={taskMemberFilter}
-                      onChange={(e) => setTaskMemberFilter(e.target.value)}
-                      className="px-3 py-2 rounded-lg font-medium transition-colors"
-                      style={{
-                        backgroundColor: taskMemberFilter !== 'all' ? 'var(--primary)' : 'var(--background-white)',
-                        color: taskMemberFilter !== 'all' ? 'white' : 'var(--foreground-muted)',
-                        border: taskMemberFilter !== 'all' ? 'none' : '1px solid var(--border)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <option value="all" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Tous les membres</option>
-                      <option value="unassigned" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Non assigné</option>
-                      <option value={currentUserId} style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Mes tâches</option>
-                      {allUsers.filter(u => u.id !== currentUserId).map(user => (
-                        <option key={user.id} value={user.id} style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>
-                          {user.name}
-                        </option>
-                      ))}
-                    </select>
-                    {taskMemberFilter !== 'all' && (
-                      <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--primary)', color: 'white' }}>
-                        {displayedProjectTasks.length}
-                      </span>
-                    )}
+                  <div className="flex items-center gap-4">
+                    {/* Filtre par membre */}
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <select
+                        value={taskMemberFilter}
+                        onChange={(e) => setTaskMemberFilter(e.target.value)}
+                        className="px-3 py-2 rounded-lg font-medium transition-colors"
+                        style={{
+                          backgroundColor: taskMemberFilter !== 'all' ? 'var(--primary)' : 'var(--background-white)',
+                          color: taskMemberFilter !== 'all' ? 'white' : 'var(--foreground-muted)',
+                          border: taskMemberFilter !== 'all' ? 'none' : '1px solid var(--border)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <option value="all" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Tous les membres</option>
+                        <option value="unassigned" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Non assigné</option>
+                        <option value={currentUserId} style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Mes tâches</option>
+                        {allUsers.filter(u => u.id !== currentUserId).map(user => (
+                          <option key={user.id} value={user.id} style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>
+                            {user.name}
+                          </option>
+                        ))}
+                      </select>
+                      {taskMemberFilter !== 'all' && (
+                        <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--primary)', color: 'white' }}>
+                          {displayedProjectTasks.length}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Tri par priorité */}
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                      </svg>
+                      <select
+                        value={taskPrioritySort}
+                        onChange={(e) => setTaskPrioritySort(e.target.value as 'none' | 'asc' | 'desc')}
+                        className="px-3 py-2 rounded-lg font-medium transition-colors"
+                        style={{
+                          backgroundColor: taskPrioritySort !== 'none' ? 'var(--primary)' : 'var(--background-white)',
+                          color: taskPrioritySort !== 'none' ? 'white' : 'var(--foreground-muted)',
+                          border: taskPrioritySort !== 'none' ? 'none' : '1px solid var(--border)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <option value="none" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Priorité: par défaut</option>
+                        <option value="asc" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Priorité: basse → haute</option>
+                        <option value="desc" style={{ backgroundColor: 'var(--background-white)', color: 'var(--foreground)' }}>Priorité: haute → basse</option>
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
