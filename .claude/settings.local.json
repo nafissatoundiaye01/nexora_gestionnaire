@@ -15,7 +15,8 @@
       "Bash(git push:*)",
       "Bash(node -e:*)",
       "Bash(grep:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dir \"C:\\\\Users\\\\hp\\\\nexora_agenda\\\\app\" /B)"
     ]
   }
 }

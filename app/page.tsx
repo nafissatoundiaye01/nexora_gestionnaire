@@ -515,6 +515,7 @@ export default function Home() {
               onUpdateMeeting={updateMeeting}
               onDeleteMeeting={deleteMeeting}
               onNotifyAttendees={async (meeting, attendeeIds) => {
+                // Notifications in-app
                 for (const attendeeId of attendeeIds) {
                   await addNotification(
                     'meeting_scheduled',
@@ -523,6 +524,20 @@ export default function Home() {
                     attendeeId,
                     { meetingId: meeting.id }
                   );
+                }
+                // Envoi d'emails aux participants
+                try {
+                  await fetch('/api/meetings/invite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      meetingId: meeting.id,
+                      attendeeIds: meeting.attendees,
+                      organizerId: currentUserId,
+                    }),
+                  });
+                } catch (error) {
+                  console.error('Erreur envoi emails:', error);
                 }
               }}
             />
