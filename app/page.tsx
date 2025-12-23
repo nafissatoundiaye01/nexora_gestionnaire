@@ -22,6 +22,7 @@ import ChangePasswordModal from './components/ChangePasswordModal';
 import ConfirmModal from './components/ConfirmModal';
 import ProjectReportModal from './components/ProjectReportModal';
 import FilterSelect from './components/FilterSelect';
+import Toast, { ToastMessage } from './components/Toast';
 
 export default function Home() {
   // Authentication
@@ -103,6 +104,16 @@ export default function Home() {
   const [taskMemberFilter, setTaskMemberFilter] = useState<'all' | 'unassigned' | string>('all');
   const [taskPrioritySort, setTaskPrioritySort] = useState<'none' | 'asc' | 'desc'>('none');
   const [reportProject, setReportProject] = useState<ProjectWithProgress | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (type: ToastMessage['type'], message: string) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, type, message }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   // Load all users for task assignment
   const fetchUsers = async () => {
@@ -527,7 +538,7 @@ export default function Home() {
                 }
                 // Envoi d'emails aux participants
                 try {
-                  await fetch('/api/meetings/invite', {
+                  const response = await fetch('/api/meetings/invite', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -536,8 +547,15 @@ export default function Home() {
                       organizerId: currentUserId,
                     }),
                   });
+                  const result = await response.json();
+                  if (response.ok && result.success) {
+                    addToast('success', `${result.results.successful} email(s) envoyé(s) avec succès`);
+                  } else {
+                    addToast('error', result.error || 'Erreur lors de l\'envoi des emails');
+                  }
                 } catch (error) {
                   console.error('Erreur envoi emails:', error);
+                  addToast('error', 'Erreur lors de l\'envoi des emails');
                 }
               }}
             />
@@ -1428,6 +1446,9 @@ export default function Home() {
           users={allUsers}
         />
       )}
+
+      {/* Toast notifications */}
+      <Toast toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }
